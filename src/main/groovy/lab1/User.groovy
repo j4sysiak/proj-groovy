@@ -1,3 +1,5 @@
+package lab1
+
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 

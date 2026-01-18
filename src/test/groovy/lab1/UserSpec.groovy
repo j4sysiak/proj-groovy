@@ -1,8 +1,10 @@
+package lab1
+
 import spock.lang.Specification
 
 class UserSpec extends Specification {
 
-    def "powinien poprawnie utworzyć obiekt User używając nazwanych argumentów"() {
+    def "powinien poprawnie utworzyć obiekt lab1.User używając nazwanych argumentów"() {
         given: "dane użytkownika"
         def name = "Jan"
         def surname = "Kowalski"
@@ -22,6 +24,6 @@ class UserSpec extends Specification {
         def user = new User(firstName: "Anna", lastName: "Nowak", age: 25)
 
         expect:
-        user.toString() == "User(Anna, Nowak, 25)"
+        user.toString() == "lab1.User(Anna, Nowak, 25)"
     }
 }
