@@ -13,6 +13,10 @@ out/
 .DS_Store
 Thumbs.db
 
-# Pliki logów i inne artefakty
+# Pliki logï¿½w i inne artefakty
 *.log
 system-info.txt
+/gradle/wrapper/gradle-wrapper.jar
+/gradle/wrapper/gradle-wrapper.properties
+/gradlew
+/gradlew.bat
