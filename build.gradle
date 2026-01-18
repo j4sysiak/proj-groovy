@@ -1,0 +1,33 @@
+plugins {
+    // Włącza wsparcie dla języka Groovy
+    id 'groovy'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    // Repozytorium, z którego Gradle pobierze biblioteki (Spocka i Groovy)
+    mavenCentral()
+}
+
+dependencies {
+    // Silnik Groovy 4.0 (kompatybilny z JDK 17)
+    implementation 'org.apache.groovy:groovy-all:4.0.15'
+
+    // Spock Framework - zestaw dla Groovy 4.0
+    testImplementation platform('org.spockframework:spock-bom:2.3-groovy-4.0')
+    testImplementation 'org.spockframework:spock-core'
+
+    // Potrzebne do uruchamiania testów Spock (opartych na JUnit 5)
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    // Spock 2.x wymaga użycia platformy JUnit
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
