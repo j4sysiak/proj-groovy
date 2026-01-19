@@ -9,7 +9,7 @@ class DiscountService {
     RateService rateService
 
     double calculatePrice(double pricePln) {
-        def rate = rateService.getRate("USD")
+        a
         return pricePln / rate
     }
 }
@@ -31,8 +31,8 @@ class DiscountSpec extends Specification {
         when: "wyliczamy cenę"
         def result = service.calculatePrice(100.0)
 
-        then: "oczekujemy, że mock zwróci kurs 4.0" // i tylko raz wejdzie do metody getRate  1 * rateServiceMock.getRate("USD")
-        1 * rateServiceMock.getRate("USD") >> 4.0G // ">>" oznacza: zwróć tę wartość
+        then: "oczekujemy, że mock zwróci kurs 4.0" //  oczekuj dokładnie jednego wywołania i zwróć 4.0G
+        1 * rateServiceMock.getRate("USD") >> 4.0G // ">>" oznacza: zwróć tę wartość - stubbing
 
         and: "wynik powinien być poprawny"
         result == 25.0
