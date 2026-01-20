@@ -9,7 +9,7 @@ class CollectionSpec extends Specification {
         // w Groovym to jest lista (List) map (Map) — każdy element to mapa z kluczami name, price, cat.
         // Mapy tworzy się składnią [key: value, ...].
         // Do pól można dostać się jako item.name lub item['name'].
-        // Poniżej przykład pokazujący utworzenie, odczyt i filtrowanie (użyto findAll i collect, oraz operatora rozproszenia \*.\ w kodzie).
+        // Poniżej przykład pokazujący utworzenie, odczyt i filtrowanie (użyto findAll i collect, oraz operatora rozproszenia \*.
 
         def products = [
                 [name: 'Laptop', price: 3500, cat: 'Tech'],
@@ -36,8 +36,7 @@ class CollectionSpec extends Specification {
         def user = [profile: [address: [city: 'Warszawa']]]
 
         expect: "dostęp do nieistniejącego klucza nie rzuca NullPointerException"
-        // TODO: Użyj operatora ?. (Safe Navigation), aby dostać się do 'street'
-        // user.profile.address.street
-        user.profile.address.street == null
+        // Użyj operatora ?. (Safe Navigation), aby dostać się do 'street'
+        user?.profile?.address?.street == null
     }
 }
