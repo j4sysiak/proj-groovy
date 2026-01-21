@@ -46,4 +46,4 @@ class DslClosureSpec extends Specification {
             result.to == "admin@dev.pl"
             result.prio == 10
         }
-    }
+}

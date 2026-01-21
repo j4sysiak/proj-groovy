@@ -31,3 +31,74 @@ test {
         events "passed", "skipped", "failed"
     }
 }
+// lab6_automatyzacja
+// Rejestrujemy nowy task o nazwie 'generateBuildInfo'
+tasks.register('generateBuildInfo') {
+    group = 'praktyki'
+    description = 'Generuje plik z informacjami o buildzie'
+
+    doLast {
+        def reportFile = file("${buildDir}/build-info.txt")
+
+        // Magia Groovy: tworzymy treść używając Multiline String i interpolacji
+        def info = """
+            BUILD REPORT
+            ------------
+            Project: ${project.name}
+            Version: ${project.version}
+            Date: ${new Date().format('yyyy-MM-dd HH:mm:ss')}
+            Java Version: ${System.getProperty('java.version')}
+            Groovy Version: ${GroovySystem.version}
+        """.stripIndent()
+
+        // Zapis do pliku jedną komendą
+        reportFile.parentFile.mkdirs()
+        reportFile.text = info
+
+        println ">>> Raport wygenerowany w: ${reportFile.path}"
+    }
+}
+
+tasks.register('generateBuildInfo2') {
+    group = 'praktyki2'
+    description = 'Generuje zaawansowany raport o projekcie z wykorzystaniem logiki Groovy'
+
+    doLast {
+        // 1. Sprawdzanie czy folder testów istnieje (Zadanie: Połączenie klocków)
+        def testFolder = file("src/test/groovy")
+        def testsFound = testFolder.exists() ? "TAK" : "NIE"
+
+        // 2. Safe Navigation Operator (?.) - Zadanie: Wykorzystanie bezpiecznej nawigacji
+        // Próbujemy pobrać właściwość 'custom.env', która może nie istnieć.
+        // Jeśli nie istnieje, bezpiecznie przechodzimy do toUpperCase() (które się nie wykona)
+        // a operator elvis (?:) podstawi wartość domyślną.
+        def envTag = System.getProperty('custom.env')?.toUpperCase() ?: "DEVELOPMENT"
+
+        // 3. Budowanie treści raportu (GString + interpolacja)
+        def reportFile = file("${layout.buildDirectory.get()}/final-report.txt")
+
+        def reportContent = """
+            =========================================
+            PROJEKT: ${project.name.toUpperCase()}
+            =========================================
+            Data buildu:    ${new Date().format('dd.MM.yyyy HH:mm')}
+            Środowisko:     ${envTag}
+            Testy Groovy:   ${testsFound}
+            -----------------------------------------
+            Statystyki plików:
+            - Klasy Java:   ${fileTree('src/main/java').files.size()}
+            - Klasy Groovy: ${fileTree('src/main/groovy').files.size()}
+            =========================================
+        """.stripIndent()
+
+        // 4. Zapis do pliku (Groovy File Sugar)
+        reportFile.parentFile.mkdirs()
+        reportFile.text = reportContent
+
+        println "------------------------------------------"
+        println ">>> Finałowy raport został wygenerowany!"
+        println ">>> Lokalizacja: ${reportFile.absolutePath}"
+        println ">>> Wynik testów w raporcie: ${testsFound}"
+        println "------------------------------------------"
+    }
+}
