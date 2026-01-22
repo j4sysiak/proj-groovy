@@ -19,8 +19,13 @@ dependencies {
     testImplementation platform('org.spockframework:spock-bom:2.3-groovy-4.0')
     testImplementation 'org.spockframework:spock-core'
 
+    // Dodaj Byte\-Buddy, aby Spock mógł tworzyć Spy/Mock dla klas (nie tylko interfejsów)
+    implementation("net.bytebuddy:byte-buddy:1.18.4")
+
     // Potrzebne do uruchamiania testów Spock (opartych na JUnit 5)
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'com.h2database:h2:2.1.214'
 }
 
 test {
