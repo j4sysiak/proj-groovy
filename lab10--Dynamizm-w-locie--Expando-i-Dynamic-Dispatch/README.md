@@ -42,11 +42,8 @@ println "Bonus: " + person.calculateBonus(5000)
 ````
 
 Kiedy to się przydaje?
-
 W testach, gdy potrzebujesz "szybkiego obiektu", który udaje skomplikowaną encję.
-
 Przy parsowaniu danych z formatów, których struktury nie znasz (np. dynamiczne parametry z API).
-
 
 
 Zadanie 2: methodMissing – Przechwytywanie "nieznanego"
@@ -56,13 +53,9 @@ To jest "czarna magia" Groovy’ego.
 Możesz napisać klasę, która nie ma żadnych metod, ale potrafi odpowiedzieć na każde wywołanie.
 
 Co masz zrobić:
-Stwórz klasę Translator.groovy:
+Stwórz klasę `Translator.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+
 class Translator {
 
     // Ta metoda uruchomi się, gdy ktoś wywoła metodę, której nie ma w klasie
@@ -76,19 +69,20 @@ class Translator {
     }
 }
 
-// Test użycia
-def t = new Translator()
-t.sayInSpanish("Dzień dobry") // Metoda sayInSpanish NIE istnieje, a jednak zadziała!
-t.sayInGerman("Guten Tag")
+// Test użycia w klasie testowej: `src/test/groovy/DynamicSpec.groovy`
+def translator = new Translator()
+translator.sayInSpanish("Dzień dobry") // Metoda sayInSpanish NIE istnieje, a jednak zadziała!
+translator.sayInGerman("Guten Tag")
+
+
+
 Zadanie 3: Test Spocka (Weryfikacja dynamizmu)
+----------------------------------------------
 
-Sprawdźmy, jak te dynamiczne byty zachowują się w testach. Stwórz src/test/groovy/DynamicSpec.groovy:
+Sprawdźmy, jak te dynamiczne byty zachowują się w testach. 
+Przyklad w: `src/test/groovy/DynamicSpec.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+``````
 import spock.lang.Specification
 
 class DynamicSpec extends Specification {
@@ -123,24 +117,88 @@ class DynamicSpec extends Specification {
         thrown(MissingMethodException)
     }
 }
-Dlaczego to są "Java-Groovy-Practices"?
+``````
 
-Elastyczność: W Javie musiałbyś użyć wzorca "Strategy" lub "Visitor" i zdefiniować interfejsy dla każdego języka. W Groovy rozwiązujesz to jednym methodMissing.
 
-Prototypowanie: Zanim zaprojektujesz sztywną strukturę klas w Javie, możesz "wyklikać" logikę w Groovy przy użyciu Expando, aby sprawdzić, jakie pola są Ci naprawdę potrzebne.
-
-Integracja z Javą: Możesz przekazać obiekt Expando do metody w Javie, która przyjmuje Map (bo Expando implementuje dostęp jak mapa) lub użyć go jako dynamicznego Proxy.
 
 Wyzwanie Finałowe Lab 10:
+-------------------------
 
 Stwórz obiekt Expando, który udaje koszyk zakupowy (shoppingCart).
-
 Dodaj do niego listę items (na starcie pustą).
-
 Dodaj metodę addProduct(name, price), która dodaje Mapę [name: name, price: price] do listy items.
-
 Dodaj metodę total(), która sumuje ceny wszystkich produktów w koszyku (użyj .price.sum(), którego nauczyłeś się w Lab 2!).
+Napisz test Spocka, który doda dwa produkty (np. Chleb 5 i Mleko 4) i sprawdzi, czy total() wynosi 9
+Daj znać, jak poszło z dynamicznym koszykiem!
+To świetny przykład na to, jak unikać tworzenia klas dla prostych struktur danych.
 
-Napisz test Spocka, który doda dwa produkty (np. Chleb 5 i Mleko 4) i sprawdzi, czy total() wynosi 9.
+Rozwiązanie wyzwania:
+---------------------
+Przyklad w: `src/test/groovy/DynamicSpec.groovy`:
 
-Daj znać, jak poszło z dynamicznym koszykiem! To świetny przykład na to, jak unikać tworzenia klas dla prostych struktur danych.
+````
+def "powinien obliczyć total dla dynamicznego koszyka Expando"() {
+    given: "dynamiczny koszyk"
+    def shoppingCart = new Expando()
+    shoppingCart.items = [] // Inicjalizacja listy produktów
+
+    // 1. Definiujemy dodawanie produktu
+    // 'items << ...' to skrót od 'items.add(...)'
+    shoppingCart.addProduct = { name, price -> 
+        items << [name: name, price: price] 
+    }
+
+    // 2. Definiujemy obliczanie sumy
+    // 'items.price' tworzy listę samych cen, a '.sum()' je dodaje
+    // '?: 0' to operator Elvisa - jeśli lista pusta, zwróć 0
+    shoppingCart.total = { 
+        items.price.sum() ?: 0 
+    }
+
+    when: "dodajemy produkty do koszyka"
+    shoppingCart.addProduct("Chleb", 5)
+    shoppingCart.addProduct("Mleko", 4)
+    shoppingCart.addProduct("Czekolada", 10)
+
+    then: "lista przedmiotów ma odpowiednią wielkość"
+    shoppingCart.items.size() == 3
+
+    and: "suma cen wszystkich produktów jest poprawna"
+    shoppingCart.total() == 19
+}
+````
+Dlaczego to jest "Groovy Way"? (Analiza składni)
+Operator << (Left Shift): 
+W Groovy zamiast list.add(element) niemal zawsze używamy list << element. 
+Jest to czytelniejsze i bardzo popularne w skryptach.
+
+Shorthand items.price: 
+To jedna z najpotężniejszych cech Groovy'ego. 
+Jeśli items jest listą map, a każda mapa ma klucz price, to wywołanie items.price automatycznie "wyciąga"
+wszystkie ceny i tworzy z nich nową listę (np. [5, 4, 10]). 
+W Javie musiałbyś użyć stream().map(...).collect().
+
+Operator Elvisa ?: 0: 
+Zabezpiecza nas przed sytuacją, gdy koszyk jest pusty. Jeśli sum() zwróciłoby null, operator podstawi 0.
+
+
+Podsumowanie:
+-------------
+-------------
+
+Dlaczego to są "Java-Groovy-Practices"?
+
+1. Elastyczność: 
+W Javie musiałbyś użyć wzorca "Strategy" lub "Visitor" i zdefiniować interfejsy dla każdego języka.
+W Groovy rozwiązujesz to jednym methodMissing.
+
+2. Prototypowanie: 
+Zanim zaprojektujesz sztywną strukturę klas w Javie, możesz "wyklikać" logikę w Groovy przy użyciu Expando, aby sprawdzić, jakie pola są Ci naprawdę potrzebne.
+
+3. Integracja z Javą: 
+Możesz przekazać obiekt Expando do metody w Javie, która przyjmuje Map (bo Expando implementuje dostęp jak mapa) lub użyć go jako dynamicznego Proxy.
+
+
+
+
+
