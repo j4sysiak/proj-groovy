@@ -71,19 +71,17 @@ Dlaczego warto znać oba operatory?
 > Czyta się go naturalnie: "Weź dane, wyczyść je, sformatuj, zapisz".
 << (Backward): Używany częściej w matematyce lub algorytmach, gdzie myślimy w kategoriach funkcji zewnętrznych i wewnętrznych f(g(x)).
 
+
+
 Zadanie 3: Test Spocka (Weryfikacja funkcyjna)
 ----------------------------------------------
 
-Stwórz src/test/groovy/FunctionalPowerSpec.groovy:
+Stwórz `src/test/groovy/FunctionalSpec.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+````
 import spock.lang.Specification
 
-class FunctionalPowerSpec extends Specification {
+class FunctionalSpec extends Specification {
 
     def "powinien poprawnie zastosować curry do filtracji"() {
         given: "ogólna funkcja filtrująca"
@@ -109,28 +107,116 @@ class FunctionalPowerSpec extends Specification {
         pipe(5) == 30 // (5 + 10) * 2
     }
 }
+````
+
+PODSUMOWANIE:
+-------------
+
 Dlaczego to są "Practices"?
 
-DRY (Don't Repeat Yourself): Zamiast pisać dziesięć metod calculateTaxForPL, calculateTaxForDE itd., masz jedną ogólną funkcję i generujesz resztę przez curry.
+DRY (Don't Repeat Yourself): 
+Zamiast pisać dziesięć metod calculateTaxForPL, calculateTaxForDE itd., 
+masz jedną ogólną funkcję i generujesz resztę przez curry.
 
-Testowalność: Małe funkcje (jak trim czy upper) są banalne do przetestowania. Składając je, masz pewność, że cały proces działa, jeśli klocki są sprawne.
+Testowalność: 
+Małe funkcje (jak trim czy upper) są banalne do przetestowania. Składając je, masz pewność, że cały proces działa, jeśli klocki są sprawne.
 
-Czytelność: Potoki typu data >> clean >> save czytają się jak opis procesu biznesowego, a nie jak skomplikowany kod.
+Czytelność: 
+Potoki typu data >> clean >> save czytają się jak opis procesu biznesowego, a nie jak skomplikowany kod.
+
+
 
 Wyzwanie Finałowe Lab 12:
+-------------------------
 
 Stwórz funkcję log(level, date, message) która przyjmuje 3 parametry.
-
-Użyj currying, aby stworzyć funkcję errorLog(message), która zawsze ma level = "ERROR" oraz date = "DZISIEJSZA_DATA" (możesz użyć new Date().format('HH:mm')).
+Użyj currying, aby stworzyć funkcję errorLog(message), która zawsze ma level = "ERROR" oraz date = "DZISIEJSZA_DATA"
+(możesz użyć new Date().format('HH:mm')).
 
 Zbuduj potok (kompozycję), który:
-
 Przyjmuje surowy tekst.
-
 Dodaje do niego prefiks "LOG: ".
-
 Przekazuje to do Twojej funkcji errorLog.
-
 Napisz test Spocka, który sprawdzi, czy wywołanie tego potoku zwraca poprawny format (np. [ERROR] [12:00] LOG: Treść błędu).
 
-Daj znać, jak poszło "zamrażanie" argumentów! To technika, którą Seniorzy uwielbiają za elegancję.
+
+Rozwiązanie wyzwania finałowego Lab 12:
+To zadanie jest kwintesencją podejścia funkcyjnego w Groovy: 
+bierzemy ogólną logikę, "zamrażamy" konfigurację (poziom błędu i czas), a następnie łączymy to w potok przetwarzania tekstu.
+
+Stwórz plik `src/test/groovy/LoggerChallengeSpec.groovy`:
+
+code
+Groovy
+download
+content_copy
+expand_less
+import spock.lang.Specification
+
+class LoggerChallengeSpec extends Specification {
+
+    def "powinien zbudować potok logowania używając currying i kompozycji"() {
+        given: "1. Bazowa funkcja logująca (3 parametry)"
+        def log = { String level, String date, String msg ->
+            "[$level] [$date] $msg"
+        }
+
+        and: "aktualna godzina (zamrożona na potrzeby testu)"
+        String now = new Date().format('HH:mm')
+
+        and: "2. Tworzymy wyspecjalizowaną funkcję errorLog (Currying)"
+        // Używamy curry podając dwa argumenty naraz.
+        // Groovy przypisze je od lewej: level="ERROR", date=now.
+        // Zostaje nam funkcja przyjmująca tylko jeden argument: message.
+        def errorLog = log.curry("ERROR", now)
+
+        and: "3. Funkcja dodająca prefiks"
+        def addPrefix = { String msg -> "LOG: $msg" }
+
+        when: "4. Budujemy rurociąg (Pipeline): Prefiks -> ErrorLog"
+        // Najpierw dodaj prefiks, potem przekaż wynik do errorLog
+        def processingPipeline = addPrefix >> errorLog
+
+        and: "uruchamiamy potok z surowym tekstem"
+        def result = processingPipeline("Nieudane połączenie z bazą")
+
+        then: "wynik ma poprawny format, zawiera ERROR, godzinę i prefiks"
+        result == "[ERROR] [$now] LOG: Nieudane połączenie z bazą"
+    }
+}
+Analiza rozwiązania (Dlaczego to działa?):
+
+log.curry("ERROR", now):
+
+Oryginał: (level, date, msg)
+
+Po curry: level to "ERROR", date to zmienna now.
+
+Wynik: Nowa funkcja, która czeka już tylko na (msg).
+
+addPrefix >> errorLog:
+
+Tekst wchodzi do addPrefix, zmienia się w "LOG: tekst".
+
+Ten zmieniony tekst wpada do errorLog.
+
+errorLog dokłada [ERROR] [HH:mm] na początek.
+
+Gratulacje!
+
+Ukończyłeś Lab 12. Masz teraz solidne podstawy programowania funkcyjnego w Groovy.
+
+Tym samym przeszliśmy przez bardzo szeroki zakres materiału:
+
+Od prostych POGO i kolekcji,
+
+Przez testy w Spocku i bazy danych SQL,
+
+Aż po zaawansowane metaprogramowanie, XML/JSON i podejście funkcyjne.
+
+To był ostatni zaplanowany moduł.
+Czy chcesz:
+
+Zakończyć kurs i otrzymać krótkie podsumowanie wszystkiego, co zrobiliśmy?
+
+Czy masz ochotę na jakiś konkretny, "bonusowy" temat (np. wielowątkowość w Groovy, REST Client)?
