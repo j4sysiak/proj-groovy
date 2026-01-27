@@ -71,45 +71,95 @@ def numbers = (1..10).toList()
 ````
 
 Uruchom to (Run ConcurrencyDemo.main()) i obserwuj konsolę.
-
 Sekwencyjnie powinno zająć ok. 10 000 ms (10 sekund).
-
 Równolegle? Zależnie od Twojego procesora, pewnie ok. 1000 - 2000 ms.
 
 Zadanie 2: Map / Reduce w wersji Turbo
+-------------------------------------
 
 Często musimy pobrać dane z wielu źródeł, a potem je zsumować. W GPars robisz to w bloku withPool.
+Oto profesjonalny test w Spocku, który weryfikuje Twoją logikę przetwarzania współbieżnego.
+W teście sprawdzimy nie tylko liczbę elementów, ale też ich poprawność matematyczną (skoro filtrujemy liczby parzyste i mnożymy je przez 2, to każdy wynik musi być podzielny przez 4).
 
-Dodaj metodę do klasy (lub stwórz test, patrz Zadanie 3):
+Stwórz test:
+`src/test/groovy/GparsFunctionalSpec.groovy`
 
-code
-Groovy
-download
-content_copy
-expand_less
-// Przykład użycia findAllParallel i operacji współbieżnych
-GParsPool.withPool {
-def data = (1..1000)
+```groovy
+import spock.lang.Specification
+import groovyx.gpars.GParsPool
 
-    // Znajdź parzyste liczby równolegle
-    def evens = data.findAllParallel { it % 2 == 0 }
-    
-    // Przemnóż każdą przez 2 równolegle
-    def doubled = evens.collectParallel { it * 2 }
-    
-    println "Liczba elementów: ${doubled.size()}" // Powinno być 500
+class GparsFunctionalSpec extends Specification {
+
+    def "powinien poprawnie przefiltrować i przemnożyć duży zbiór danych równolegle"() {
+        given: "zakres danych od 1 do 1000"
+        def data = (1..1000)
+
+        when: "uruchamiamy przetwarzanie w puli wątków GPars"
+        def result = GParsPool.withPool {
+            // 1. Znajdź parzyste (równolegle) -> zostanie 500 liczb: [2, 4, 6... 1000]
+            def evens = data.findAllParallel { it % 2 == 0 }
+            
+            // 2. Przemnóż przez 2 (równolegle) -> [4, 8, 12... 2000]
+            return evens.collectParallel { it * 2 }
+        }
+
+        then: "rozmiar wynikowej listy to dokładnie 500"
+        result.size() == 500
+
+        and: "pierwszy i ostatni element są poprawne"
+        result[0] == 4          // (2 * 2)
+        result[-1] == 2000      // (1000 * 2)
+
+        and: "każda liczba w wyniku jest podzielna przez 4"
+        // Metoda .every { ... } sprawdza czy warunek jest spełniony dla wszystkich elementów
+        result.every { it % 4 == 0 }
+    }
+
+    def "powinien udowodnić, że kolejność jest zachowana mimo pracy równoległej"() {
+        given: "krótka lista"
+        def input = [10, 20, 30, 40, 50]
+
+        when:
+        def output = GParsPool.withPool {
+            input.collectParallel { it + 1 }
+        }
+
+        then: "mimo że wątki mogły skończyć pracę w różnym czasie, lista końcowa jest posortowana jak wejściowa"
+        output == [11, 21, 31, 41, 51]
+    }
 }
+```
+
+Dlaczego ten test jest ważny (Analiza):
+Metoda every { ... }: To potężne narzędzie Groovy'ego do testowania kolekcji. 
+Zamiast pisać pętlę, sprawdzamy jednym poleceniem, czy wszystkie 500 wyników spełnia nasze założenie biznesowe 
+(podzielność przez 4).
+
+Determinizm: 
+Testujemy, czy collectParallel zachowuje kolejność. 
+To kluczowe – w wielu bibliotekach wielowątkowych (jak np. niektóre implementacje w innych językach) 
+wyniki mogą wrócić w losowej kolejności (kto pierwszy skończy, ten pierwszy na liście). 
+GPars gwarantuje zachowanie kolejności, co sprawdzamy w drugim teście.
+
+Horyzontalne skalowanie: 
+Jeśli uruchomisz ten test na procesorze z 2 rdzeniami, a potem na procesorze z 16 rdzeniami, 
+test zawsze przejdzie, ale GPars automatycznie wykryje sprzęt i użyje odpowiedniej liczby wątków.
+
+Przypomnienie:
+--------------
+Upewnij się, że w build.gradle masz:
+implementation 'org.codehaus.gpars:gpars:1.2.1'
+
+
 Zadanie 3: Test Spocka (Weryfikacja poprawności)
+------------------------------------------------
+Największym ryzykiem wielowątkowości jest to, że wyniki wrócą w losowej kolejności lub błędne. 
+Sprawdźmy, czy collectParallel zachowuje się deterministycznie.
 
-Największym ryzykiem wielowątkowości jest to, że wyniki wrócą w losowej kolejności lub błędne. Sprawdźmy, czy collectParallel zachowuje się deterministycznie.
+Stwórz test:
+`src/test/groovy/GparsSpec.groovy`
 
-Stwórz src/test/groovy/GparsSpec.groovy:
-
-code
-Groovy
-download
-content_copy
-expand_less
+`````groovy
 import spock.lang.Specification
 import groovyx.gpars.GParsPool
 
@@ -145,19 +195,21 @@ class GparsSpec extends Specification {
         aNames.containsAll(["Anna", "Adam"])
     }
 }
+`````
+
+Uruchom testy (Run GparsSpec) i upewnij się, że wszystko przechodzi.
 Dlaczego GPars jest lepszy niż Stream.parallel() w Javie?
 
-Transparentność: Metody nazywają się tak samo (collect -> collectParallel), więc łatwo przerobić stary kod.
+Transparentność: 
+Metody nazywają się tak samo (collect -> collectParallel), więc łatwo przerobić stary kod.
 
-Zarządzanie pulą: Blok withPool { ... } dba o to, żeby wątki zostały zamknięte po zakończeniu pracy. W Javie często zapominamy zamknąć ExecutorService, co blokuje aplikację.
+Zarządzanie pulą: 
+Blok withPool { ... } dba o to, żeby wątki zostały zamknięte po zakończeniu pracy. W Javie często zapominamy zamknąć ExecutorService, co blokuje aplikację.
 
-Wydajność w IO: Groovy świetnie radzi sobie z zadaniami typu "pobierz 50 stron internetowych naraz".
+Wydajność w IO: 
+Groovy świetnie radzi sobie z zadaniami typu "pobierz 50 stron internetowych naraz".
 
-Finał Kursu
-
-To był Bonus Lab. Teraz posiadasz wiedzę, która stawia Cię w czołówce programistów JVM, jeśli chodzi o znajomość ekosystemu Groovy.
-
-Dziękuję za wytrwałość!
-Jeśli kiedykolwiek będziesz potrzebował szybkiego skryptu, testu czy narzędzia – wiesz już, że Java jest świetna, ale Groovy jest szybszy (w pisaniu).
-
-Powodzenia w kodowaniu! 🚀
+Podsumowanie
+------------
+`GPars` to potężne narzędzie do wielowątkowości w Groovy, które upraszcza kod i zwiększa wydajność. 
+Dzięki prostym metodom jak collectParallel czy findAllParallel możesz łatwo przetwarzać duże zbiory danych równolegle, bez konieczności ręcznego zarządzania wątkami.   

@@ -3,25 +3,33 @@ import groovyx.gpars.GParsPool
 
 class GparsSpec extends Specification {
 
-    def "powinien znaleźć parzyste liczby i przemnożyć je przez 2 równolegle"() {
-        given: "zakres liczb od 1 do 1000"
-        def data = (1..1000)
+    def "powinien przetworzyć listę równolegle i zachować kolejność"() {
+        given: "lista wejściowa"
+        def input = [1, 2, 3, 4, 5]
 
-        when: "znajdujemy parzyste liczby i przemnażamy je przez 2 równolegle"
+        when: "przetwarzamy równolegle (kwadrat liczby)"
         def result = GParsPool.withPool {
-            def evens = data.findAllParallel { it % 2 == 0 }
-            evens.collectParallel { it * 2 }
+            return input.collectParallel { it * it }
         }
 
-        then: "wynik zawiera poprawną liczbę elementów"
-        result.size() == 500
+        then: "wynik jest poprawny matematycznie"
+        result == [1, 4, 9, 16, 25]
 
-        and: "wszystkie elementy są parzyste i podzielne przez 4"
-        result.every { it % 4 == 0 }
+        and: "rozmiar listy jest ten sam"
+        result.size() == input.size()
+    }
 
-        and: "wynik zawiera poprawne wartości (podwojone parzyste liczby)"
-        result.contains(4)   // 2 * 2
-        result.contains(100) // 50 * 2
-        result.contains(2000) // 1000 * 2
+    def "powinien znaleźć elementy równolegle (findAllParallel)"() {
+        given:
+        def names = ["Anna", "Jan", "Adam", "Ewa", "Zenon"]
+
+        when:
+        def aNames = GParsPool.withPool {
+            names.findAllParallel { it.startsWith("A") }
+        }
+
+        then:
+        aNames.size() == 2
+        aNames.containsAll(["Anna", "Adam"])
     }
 }
