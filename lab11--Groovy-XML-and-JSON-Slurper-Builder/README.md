@@ -21,7 +21,7 @@ W Groovy czytasz JSON-a i używasz go jak zwykłego obiektu (kolekcji map i list
 Co masz zrobić:
 Stwórz plik `src/main/groovy/DataProcessor.groovy`:
 
-``````
+``````groovy
 import groovy.json.JsonSlurper
 
 def jsonText = '''
@@ -55,8 +55,9 @@ Zadanie 2: JsonBuilder – Generowanie JSON przez DSL
 
 Zamiast ręcznie składać Stringi, używamy DSL, który wygląda jak struktura JSON-a.
 
-Zapisz test jako src/main/groovy/JsonBuilder.groovy.
-````
+Zapisz test jako `src/main/groovy/JsonBuilder.groovy`
+
+````groovy
 import groovy.json.JsonBuilder
 
 def builder = new JsonBuilder()
@@ -85,7 +86,7 @@ W Groovy używamy `MarkupBuilder`, który pozwala generować XML-e tak łatwo ja
 
 utworz klasę `src/main/groovy/XmlGenerator.groovy`:
  
-````
+````groovy
 import groovy.xml.MarkupBuilder
 
 def writer = new StringWriter()
@@ -117,7 +118,7 @@ Zadanie 4: Test Spocka (Weryfikacja danych)
 
 Stwórz `src/test/groovy/DataSpec.groovy`:
 
-``````
+``````groovy
 import spock.lang.Specification
 import groovy.json.JsonSlurper
 import groovy.xml.XmlSlurper
@@ -192,7 +193,7 @@ Oto kompletne rozwiązanie wyzwania do Lab 11. To zadanie pokazuje, jak Groovy �
 
 Stwórz klasę ConverterService.groovy (lub umieść logikę bezpośrednio w teście, jak poniżej):
 
-``````
+``````groovy
 import groovy.json.JsonSlurper
 import groovy.xml.MarkupBuilder
 
@@ -221,11 +222,7 @@ def products = new JsonSlurper().parseText(jsonInput)
 
 Stwórz plik src/test/groovy/JsonToXmlSpec.groovy. Wykorzystamy tu XmlSlurper, aby sprawdzić strukturę wygenerowanego tekstu.
 
-code
-Groovy
-download
-content_copy
-expand_less
+`````groovy
 import spock.lang.Specification
 import groovy.xml.XmlSlurper
 
@@ -256,6 +253,8 @@ class JsonToXmlSpec extends Specification {
         shop.product[1].text() == "Cena: 100"
     }
 }
+`````
+
 Analiza techniczna (Co tu się wydarzyło?):
 
 GPath w XML: Zauważ, jak łatwo sprawdzamy atrybuty w teście: shop.product[0].@name. Znak @ w Groovy służy do dostępu do atrybutów XML. To znacznie prostsze niż używanie metod getAttribute() w Javie.

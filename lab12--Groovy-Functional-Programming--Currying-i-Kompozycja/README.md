@@ -146,11 +146,7 @@ bierzemy ogólną logikę, "zamrażamy" konfigurację (poziom błędu i czas), a
 
 Stwórz plik `src/test/groovy/LoggerChallengeSpec.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+````groovy
 import spock.lang.Specification
 
 class LoggerChallengeSpec extends Specification {
@@ -184,6 +180,8 @@ class LoggerChallengeSpec extends Specification {
         result == "[ERROR] [$now] LOG: Nieudane połączenie z bazą"
     }
 }
+````
+
 Analiza rozwiązania (Dlaczego to działa?):
 
 log.curry("ERROR", now):

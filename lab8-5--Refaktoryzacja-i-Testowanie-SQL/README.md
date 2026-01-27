@@ -16,11 +16,7 @@ Dzięki temu będziemy mogli wstrzyknąć obiekt Sql (Dependency Injection).
 
 Zmień plik src/main/groovy/EmployeeRepository.groovy:
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import groovy.sql.Sql
 
 class EmployeeRepository {
@@ -47,17 +43,16 @@ private Sql sql
         return sql.firstRow("SELECT SUM(salary) as total FROM Employee").total ?: 0
     }
 }
+```
+
 Krok 2: Testowanie w Spocku
+---------------------------
 
 Teraz stworzymy test, który faktycznie uruchamia tę bazę w pamięci i sprawdza, czy logika EmployeeRepository działa.
 
-Stwórz src/test/groovy/EmployeeRepositorySpec.groovy:
+Stwórz `src/test/groovy/EmployeeRepositorySpec.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import groovy.sql.Sql
 import spock.lang.Specification
 import spock.lang.Shared
@@ -98,6 +93,8 @@ class EmployeeRepositorySpec extends Specification {
         repository.getRichEmployeesNames(5000) == ["Drożej"]
     }
 }
+```
+
 Co zyskaliśmy dzięki takiemu podejściu?
 
 Odizolowanie logiki: Testujemy "co" robi nasza klasa, a nie "jak" łączy się z bazą (bo bazę dostajemy gotową).
@@ -110,11 +107,7 @@ Bonus: Jak przetestować skrypt, który tylko wypisuje coś przez println?
 
 Jeśli bardzo chcesz przetestować stary skrypt SqlQuickstart bez zmieniania go w klasę, możesz przechwycić to, co wypisuje na konsolę. W Groovym robimy to tak:
 
-code
-Groovy
-download
-content_copy
-expand_less
+````groovy
 def "powinien wypisać coś na konsolę"() {
 given:
 def output = new ByteArrayOutputStream()
@@ -130,6 +123,7 @@ System.setOut(new PrintStream(output))
     cleanup:
     System.setOut(System.out) // Koniecznie przywróć standardowe wyjście!
 }
+````
 
 [2]
 Czy chcesz teraz przejść do Lab 9 (Transformacje AST), czy masz jeszcze pytania do testowania bazy danych?

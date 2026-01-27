@@ -18,7 +18,7 @@ Możemy napisać własną logikę bezpośrednio w pliku budującym, aby zautomat
 Co masz zrobić:
 Otwórz swój plik `build.gradle` i dopisz na samym końcu poniższy kod:
 
-```
+```groovy
 // Rejestrujemy nowy task o nazwie 'generateBuildInfo'
 tasks.register('generateBuildInfo') {
 group = 'praktyki'
@@ -66,17 +66,13 @@ Do tego służy `JsonSlurper`.
 Co masz zrobić:
 Stwórz w `src/main/groovy` plik `ReportScanner.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import groovy.json.JsonSlurper
 
 class ReportScanner {
 static void main(String[] args) {
 // Symulacja wyniku z zewnętrznego systemu (np. SonarQube lub Testy)
-def jsonResponse = '''
+def jsonResponse =
 {
 "status": "SUCCESS",
 "metrics": {
@@ -86,7 +82,7 @@ def jsonResponse = '''
 },
 "environment": "production"
 }
-'''
+
 
         def slurper = new JsonSlurper()
         def result = slurper.parseText(jsonResponse)
@@ -105,7 +101,10 @@ def jsonResponse = '''
         }
     }
 }
+````
+
 Zadanie 3: Wyzwanie Finałowe (Połączenie klocków)
+-------------------------------------------------
 
 Spróbuj połączyć wiedzę ze wszystkich Labów:
 
@@ -120,11 +119,8 @@ Oto gotowe rozwiązanie Wyzwania Finałowego. Zmodyfikujemy plik build.gradle, a
 
 Wklej poniższy kod do swojego pliku build.gradle (zastępując poprzednią wersję taska lub dodając go jako nowy):
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
+// Wyzwanie Finałowe: Zaawansowany Task Gradle z logiką Groovy
 tasks.register('generateBuildInfo') {
 group = 'praktyki'
 description = 'Generuje zaawansowany raport o projekcie z wykorzystaniem logiki Groovy'
@@ -168,6 +164,8 @@ description = 'Generuje zaawansowany raport o projekcie z wykorzystaniem logiki 
         println "------------------------------------------"
     }
 }
+```
+
 Co tutaj udowodniliśmy?
 
 Integracja z systemem plików: Użyliśmy file("...").exists(), co jest podstawą w skryptach CI/CD (np. sprawdzenie, czy istnieją artefakty przed ich wysłaniem).

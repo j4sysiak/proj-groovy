@@ -19,7 +19,7 @@ Co masz zrobić:
 W folderze `src/test/groovy` stwórz plik `PasswordSpec.groovy` i wpisz tam:
 
 
-```
+```groovy
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -60,7 +60,7 @@ Co masz zrobić:
 Dopisz pod poprzednim testem (lub w nowym pliku):  nowy plik `DiscountSpec.groovy`:
 
 
-```
+```groovy
 interface RateService {
 decimal getRate(String currency)
 }
@@ -125,7 +125,7 @@ Zwróć uwagę na to, jak w Groovym możemy "łańcuchować" (chaining) metody j
 
 pilk: `Lab2Collections.groovy`
 
-```
+```groovy
 import spock.lang.Specification
 
 class CollectionSpec extends Specification {
@@ -197,7 +197,7 @@ Krok 1: Przygotuj nowy plik testowy
 
 W folderze `src/test/groovy` stwórz plik `Lab2Collections.groovy`. Wklej do niego poniższy szkielet kodu:
 
-``````
+``````groovy
 import spock.lang.Specification
 
 class Lab2Collections extends Specification {
@@ -237,7 +237,10 @@ class Lab2Collections extends Specification {
         nazwy == ["Piwo", "Wino"]
     }
 }
+``````
+
 Krok 2: Co masz teraz zrobić? (Twoje zadania)
+---------------------------------------------
 
 Uruchom ten test. (Prawy przycisk myszy na nazwę klasy -> Run). Pierwszy test ("Zadanie 1") się wywali, bo musisz go uzupełnić.
 

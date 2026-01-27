@@ -18,7 +18,7 @@ Możesz do niej przypisać pole lub funkcję (Closure) w dowolnym momencie.
 Co masz zrobić:
 Stwórz plik `src/main/groovy/DynamicMagic.groovy`:
 
-````
+````groovy
 // Tworzymy obiekt bez żadnej klasy!
 def person = new Expando()
 
@@ -55,7 +55,7 @@ Możesz napisać klasę, która nie ma żadnych metod, ale potrafi odpowiedzieć
 Co masz zrobić:
 Stwórz klasę `Translator.groovy`:
 
-
+``````groovy
 class Translator {
 
     // Ta metoda uruchomi się, gdy ktoś wywoła metodę, której nie ma w klasie
@@ -68,6 +68,7 @@ class Translator {
         throw new MissingMethodException(name, this.class, args)
     }
 }
+``````
 
 // Test użycia w klasie testowej: `src/test/groovy/DynamicSpec.groovy`
 def translator = new Translator()
@@ -82,7 +83,7 @@ Zadanie 3: Test Spocka (Weryfikacja dynamizmu)
 Sprawdźmy, jak te dynamiczne byty zachowują się w testach. 
 Przyklad w: `src/test/groovy/DynamicSpec.groovy`:
 
-``````
+``````groovy
 import spock.lang.Specification
 
 class DynamicSpec extends Specification {
@@ -136,7 +137,7 @@ Rozwiązanie wyzwania:
 ---------------------
 Przyklad w: `src/test/groovy/DynamicSpec.groovy`:
 
-````
+````groovy
 def "powinien obliczyć total dla dynamicznego koszyka Expando"() {
     given: "dynamiczny koszyk"
     def shoppingCart = new Expando()

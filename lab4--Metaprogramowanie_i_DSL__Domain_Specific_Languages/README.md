@@ -17,7 +17,7 @@ Co masz zrobić:
 Stwórz plik `MetaprogrammingSpec.groovy` w folderze testowym:
 
 
-```
+```groovy
 import spock.lang.Specification
 
 class MetaprogrammingSpec extends Specification {
@@ -67,7 +67,7 @@ Co masz zrobić:
 Dopisz poniższy kod do tego samego pliku (lub nowej klasy): `DslClosureSpec.groovy`:
 
 
-```
+```groovy
 class EmailConfig {
     String title
     String to
@@ -128,7 +128,7 @@ To zadanie świetnie pokazuje, jak Groovy potrafi "rozszerzyć" możliwości czy
 
 Oto kompletny kod do Twojego pliku `DaysAgoSpec.groovy` (lub nowego pliku).
 
-```
+```groovy
 import spock.lang.Specification
 import java.time.LocalDate
 

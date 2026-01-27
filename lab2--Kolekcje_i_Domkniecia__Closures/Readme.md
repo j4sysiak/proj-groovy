@@ -17,7 +17,7 @@ Zadanie 1 (do sprawdzenia w Main.groovy lub w teście):
 
 Zauważ różnicę w czytelności:
 
-```
+```groovy
 // LISTY
 def lista = [1, 2, 3, 4, 5] // java.util.ArrayList
 println lista[0]            // dostęp przez indeks
@@ -37,7 +37,7 @@ Jeśli closure ma tylko jeden parametr, Groovy nazywa go domyślnie it.
 
 Przykład:
 
-``````
+``````groovy
 def powitanie = { name -> println "Cześć $name!" }
 powitanie("Tomek")
 
@@ -57,7 +57,7 @@ Zadanie 2: Operacje na danych
 
 Załóżmy, że mamy klasę Product (możesz ją szybko stworzyć jak User w Lab 1).
 
-``````  
+``````groovy
 import groovy.transform.Canonical
 
 @Canonical
@@ -95,7 +95,7 @@ Zadanie Praktyczne dla Ciebie (w Spocku):
 Otwórz/stwórz `src/test/groovy/CollectionSpec.groovy` i zaimplementuj następujący test. 
 Twoim zadaniem jest dopisać brakujący kod, aby test przeszedł:
 
-``````
+``````groovy
 import spock.lang.Specification
 
 class Lab2Collections extends Specification {

@@ -16,7 +16,7 @@ Stwórz tam pakiet (folder) `pl.edu.praktyki`.
 
 Stwórz plik `LegacyService.java`:
 
-```
+```groovy
 package pl.edu.praktyki;
 
 // Czysta Java - średniki, typy, brak magii
@@ -38,7 +38,7 @@ Teraz pokażemy, że Groovy widzi klasę Javy tak, jakby była jego własna.
 
 W `src/main/groovy` stwórz plik `GroovyBusinessLogic.groovy`:
 
-```
+```groovy
 import pl.edu.praktyki.LegacyService
 
 class GroovyBusinessLogic {
@@ -62,7 +62,7 @@ pisania własnych formuł zniżkowych w Groovym bez restartu serwera.
 W `src/main/java/pl/edu/praktyki` stwórz klasę `AppRunner.java`:
 
 
-```
+```groovy
 package pl.edu.praktyki;
 
 import groovy.lang.Binding;
@@ -119,7 +119,7 @@ To zadanie świetnie pokazuje, jak Java może "zlecić" wykonanie logiki bizneso
 
 Oto zmodyfikowana klasa AppRunner.java z zaimplementowaną logiką warunkową wewnątrz skryptu:
 
-```
+```groovy
 package pl.edu.praktyki;
 
 import groovy.lang.Binding;

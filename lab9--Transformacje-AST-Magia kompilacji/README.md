@@ -20,11 +20,7 @@ Klasa z adnotacją @Delegate automatycznie zyska wszystkie metody obiektu, na kt
 Co masz zrobić:
 Stwórz plik `src/main/groovy/PrinterDSL.groovy`:
 
-code
-Groovy
-download
-content_copy
-expand_less
+````groovy
 import groovy.transform.Delegate
 
 class SimplePrinter {
@@ -40,18 +36,17 @@ String model = "HP Laser 5000"
     
     void printHighRes(String text) { println "Model $model drukuje w 4K: $text" }
 }
+````
+
 Zadanie 2: @Memoized – Automatyczny Cache
+-----------------------------------------
 
 Wyobraź sobie funkcję, która liczy coś bardzo długo. @Memoized sprawia, że przy drugim wywołaniu z tym samym parametrem, wynik jest brany z pamięci (cache), a nie obliczany ponownie.
 
 Co masz zrobić:
 Stwórz klasę AnalyticsService.groovy:
 
-code
-Groovy
-download
-content_copy
-expand_less
+````groovy
 import groovy.transform.Memoized
 
 class AnalyticsService {
@@ -63,15 +58,14 @@ class AnalyticsService {
         return "Raport #$id - Dane: ${Math.random()}"
     }
 }
+````
+
 Zadanie 3: @TailRecursive – Koniec z StackOverflow
+--------------------------------------------------
 
 Rekurencja w Javie przy dużych liczbach często rzuca StackOverflowError. Groovy potrafi zamienić rekurencję w zwykłą pętlę pod spodem, jeśli użyjesz tej adnotacji.
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import groovy.transform.TailRecursive
 
 class MathWizard {
@@ -82,15 +76,13 @@ class MathWizard {
         return sumLongRange(n - 1, accumulator + n)
     }
 }
+```
+
 Zadanie 4: Test Spocka (Weryfikacja Magii)
 
 Teraz sprawdźmy, czy to faktycznie działa. Stwórz src/test/groovy/AstSpec.groovy:
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import spock.lang.Specification
 
 class AstSpec extends Specification {
@@ -131,6 +123,8 @@ class AstSpec extends Specification {
         MathWizard.sumLongRange(100_000) == 5000050000L
     }
 }
+```
+
 Dlaczego to są "Practices"?
 
 @Delegate: Pozwala unikać głębokich hierarchii dziedziczenia. Zamiast SmartPrinter extends SimplePrinter, używamy kompozycji. To "czystszy" kod.
@@ -191,11 +185,7 @@ String model = "HP Laser 5000"
 
 Dopisz poniższy test do swojej klasy AstSpec.groovy. Sprawdzimy nie tylko obecność modelu, ale też upewnimy się, że delegat (basicPrinter) nie zaśmieca nam wyniku.
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 def "powinien wygenerować toString zawierający tylko model drukarki"() {
 given: "nowa inteligentna drukarka"
 def smartPrinter = new SmartPrinter()
@@ -215,6 +205,9 @@ def smartPrinter = new SmartPrinter()
     // Groovy generuje format: NazwaKlasy(pole1, pole2)
     result == "SmartPrinter(HP Laser 5000)"
 }
+````
+
+
 Dlaczego to jest "Practice" (Dobra praktyka)?
 
 Czytelność Logów: W dużych systemach logowanie całych obiektów jest kluczowe dla debugowania. @ToString gwarantuje, że log będzie zawsze aktualny, nawet jeśli dodasz nowe pola (wystarczy je dopisać do includes).
