@@ -129,4 +129,79 @@ class RestApiSpec extends Specification {
         then: "JDK rzuca błąd argumentu jeszcze przed wysłaniem żądania"
         thrown(IllegalArgumentException)
     }
+
+    def "Zadanie 5: powinien pobrać dwa tytuły asynchronicznie"() {
+        when:
+        def future1 = RestClientService.getPostTitleAsync(1)
+        def future2 = RestClientService.getPostTitleAsync(2)
+
+        // Czekamy na oba wyniki (join() blokuje do czasu zakończenia)
+        def titles = [future1.join(), future2.join()]
+
+        then:
+        titles.size() == 2
+        titles.every { it instanceof String }
+    }
+
+    def "Zadanie 6: powinien dołączyć treść odpowiedzi (JSON) do komunikatu błędu"() {
+        when: "wołamy metodę dla nieistniejącego ID (wymuszamy 404)"
+        RestClientService.getWithDetailedError(99999)
+
+        then: "zostaje rzucony wyjątek RuntimeException"
+        def ex = thrown(RuntimeException)
+
+        and: "wiadomość wyjątku zawiera kod statusu (404)"
+        ex.message.contains("API_ERROR_404")
+
+        and: "wiadomość wyjątku zawiera sparsowane ciało błędu"
+        // JsonPlaceholder dla 404 zwraca pusty JSON '{}'.
+        // Slurper zamienia to na pustą mapę Groovy, która w stringu wygląda tak: '[:]'
+        println "Otrzymany komunikat błędu: ${ex.message}"
+
+        ex.message.contains("[:]")
+    }
+
+    def "Zadanie 7: powinien wyciągnąć domeny z maili komentujących"() {
+        when:
+        List comments = RestClientService.getComments(1)
+
+        then:
+        // 1. comments.email -> lista maili ["Nikita@garfield.biz", "Hayden@althea.it" ...]
+        // 2. collect { it.split('@')[1] } -> lista samych domen
+        // 3. unique() -> bez duplikatów
+        def domains = comments.email.collect { it.split('@')[1] }.unique()
+
+        println "Unikalne domeny komentujących: $domains"
+        domains.size() > 0
+        domains.contains("garfield.biz")
+    }
+
+    def "Zadanie 8: powinien ponowić zapytanie w razie awarii"() {
+        when:
+        def result = withRetry(3) {
+            RestClientService.getPost(1)
+        }
+
+        then:
+        result.id == 1
+    }
+
+    def withRetry(int maxAttempts, Closure code) {
+        int attempts = 0
+        while (attempts < maxAttempts) {
+            try {
+                // Próba wykonania przekazanego kodu
+                return code()
+            } catch (Exception e) {
+                attempts++
+                println ">>> [RETRY] Próba $attempts nieudana (${e.message}). Ponawiam..."
+
+                // Jeśli wyczerpaliśmy limit prób, rzucamy błąd dalej
+                if (attempts >= maxAttempts) throw e
+
+                // Czekamy chwilę przed kolejną próbą (np. 500ms)
+                sleep(500)
+            }
+        }
+    }
 }

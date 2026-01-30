@@ -5,6 +5,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.net.http.HttpTimeoutException
+import java.util.concurrent.CompletableFuture
 
 class RestClientService {
 
@@ -123,4 +124,52 @@ class RestClientService {
             throw new RuntimeException("API_TIMEOUT")
         }
     }
+
+    static CompletableFuture<String> getPostTitleAsync(int id) {
+        def request = HttpRequest.newBuilder()
+                .uri(URI.create("https://jsonplaceholder.typicode.com/posts/$id"))
+                .GET()
+                .build()
+
+        // sendAsync zwraca CompletableFuture
+        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply { response ->
+                    def json = slurper.parseText(response.body())
+                    return json.title
+                }
+    }
+
+    static def getWithDetailedError(int id) {
+        def request = HttpRequest.newBuilder()
+                .uri(URI.create("https://jsonplaceholder.typicode.com/posts/$id"))
+                .GET()
+                .build()
+
+        def response = client.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (response.statusCode() >= 400) {
+            // Próbujemy sparsować JSON błędu, jeśli istnieje
+            def errorBody = [:]
+            try {
+                errorBody = slurper.parseText(response.body())
+            } catch (Exception e) {
+                errorBody = [error: "Raw error: ${response.body()}"]
+            }
+
+            // Rzucamy wyjątek z bogatym opisem
+            throw new RuntimeException("API_ERROR_${response.statusCode()}: ${errorBody}")
+        }
+        return slurper.parseText(response.body())
+    }
+
+    static List getComments(int postId) {
+        def request = HttpRequest.newBuilder()
+                .uri(URI.create("https://jsonplaceholder.typicode.com/posts/$postId/comments"))
+                .GET()
+                .build()
+
+        def response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        return slurper.parseText(response.body())
+    }
+
 }
