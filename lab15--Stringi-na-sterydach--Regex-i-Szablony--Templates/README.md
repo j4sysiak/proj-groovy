@@ -383,7 +383,7 @@ To zadanie łączy w sobie przetwarzanie tekstu linia po linii (eachLine)
 z potęgą wyrażeń regularnych do ekstrakcji danych (=~).
 
 1. Rozwiązanie: Klasa ConfigParser
-Stwórz plik `src/main/groovy/ConfigParser.groovy` (lub dodaj tę metodę do istniejącej klasy RegexDemo).
+Stwórz plik `src/main/groovy/ConfigParser.groovy`.
 
 ```groovy
 class ConfigParser {
@@ -425,11 +425,7 @@ class ConfigParser {
 
 Stwórz plik src/test/groovy/ConfigParserSpec.groovy.
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import spock.lang.Specification
 
 class ConfigParserSpec extends Specification {
@@ -465,33 +461,18 @@ class ConfigParserSpec extends Specification {
         !result.keySet().any { it.contains("komentarz") }
     }
 }
+```
+
 Analiza rozwiązania (Dlaczego to jest "Groovy Style"?):
 
-eachLine: Zamiast tworzyć BufferedReader, InputStreamReader i pętle while, metoda eachLine na Stringu robi to automatycznie.
+eachLine: 
+Zamiast tworzyć BufferedReader, InputStreamReader i pętle while, 
+metoda eachLine na Stringu robi to automatycznie.
 
 Regex Extraction (=~):
+matcher[0][1] – to esencja wygody Groovy'ego. 
+W Javie musiałbyś robić matcher.find(), a potem matcher.group(1). 
+Tutaj traktujesz wynik dopasowania jak tablicę wielowymiarową.
 
-matcher[0][1] – to esencja wygody Groovy'ego. W Javie musiałbyś robić matcher.find(), a potem matcher.group(1). Tutaj traktujesz wynik dopasowania jak tablicę wielowymiarową.
-
-Elastyczność mapy: Zapis config[key] = value jest znacznie czytelniejszy niż config.put(key, value).
-
-GRATULACJE! 🏁
-
-Dotarliśmy do samego końca.
-Przerobiłeś 15 Labów, które pokrywają cały ekosystem Groovy:
-
-Składnia i Kolekcje
-
-Testowanie (Spock)
-
-Integracja z Javą
-
-Bazy danych (SQL) i API (REST)
-
-Metaprogramowanie i DSL
-
-Wielowątkowość (GPars)
-
-Praca z tekstem (Regex/Templates)
-
-Jesteś teraz w pełni wyposażony, by pisać nowoczesny, zwięzły kod na platformie JVM.
+Elastyczność mapy: 
+Zapis config[key] = value jest znacznie czytelniejszy niż config.put(key, value).
