@@ -189,13 +189,9 @@ Zadanie 3: Template Engine – Generowanie e-maili
 Zamiast sklejać Stringi plusem ("Witaj " + name + "!"), użyjemy silnika szablonów. 
 To podstawa generowania raportów, maili i konfiguracji.
 
-Dodaj do klasy RegexDemo:
+utwórz klasę: `src/main/groovy/TemplateGenerator.groovy`
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import groovy.text.SimpleTemplateEngine
 
 class TemplateGenerator {
@@ -224,17 +220,84 @@ Witaj ${user}!
         return engine.createTemplate(templateText).make(binding).toString()
     }
 }
+```
+
+Rozwiązanie Zadania 3: Test Spocka: TemplateSpec.groovy
+-------------------------------------------------------
+
+Oto test Spock dla Zadania 3, który weryfikuje działanie silnika szablonów.
+Test sprawdzi trzy kluczowe rzeczy:
+1. Czy zmienne proste (${user}) zostały podmienione.
+2. Czy logika pętli (<% products.each ... %>) wygenerowała listę.
+3. Czy nie zostały śmieci w tekście (czyli surowy kod szablonu).
+
+kod w pliku `src/test/groovy/TemplateSpec.groovy` 
+
+```groovy
+import spock.lang.Specification
+
+class TemplateSpec extends Specification {
+
+    def "powinien wygenerować spersonalizowany e-mail używając SimpleTemplateEngine"() {
+        given: "dane wejściowe do szablonu"
+        def userName = "Krzysztof"
+        def productList = ["Kawa", "Mleko", "Ciasteczka"]
+
+        when: "generujemy treść maila"
+        String emailContent = TemplateGenerator.generateWelcomeEmail(userName, productList)
+
+        // Wypiszmy wynik na konsolę, żebyś zobaczył efekt końcowy!
+        println "--- WYGENEROWANY EMAIL ---\n$emailContent\n--------------------------"
+
+        then: "treść zawiera powitanie z imieniem"
+        emailContent.contains("Witaj Krzysztof!")
+
+        and: "treść zawiera wylistowane produkty (efekt pętli w szablonie)"
+        emailContent.contains("- Kawa")
+        emailContent.contains("- Mleko")
+        emailContent.contains("- Ciasteczka")
+
+        and: "treść zawiera poprawnie obliczoną sumę"
+        emailContent.contains("Suma pozycji: 3")
+
+        and: "w wynikowym tekście NIE MA już surowych znaczników szablonu"
+        !emailContent.contains("<%")
+        !emailContent.contains('${')
+    }
+
+    def "powinien poprawnie obsłużyć pustą listę produktów"() {
+        given:
+        def user = "Anna"
+        def emptyList = []
+
+        when:
+        def email = TemplateGenerator.generateWelcomeEmail(user, emptyList)
+
+        then:
+        email.contains("Witaj Anna!")
+        email.contains("Suma pozycji: 0")
+        !email.contains("- ") // Nie powinno być żadnych myślników z listy
+    }
+}
+```
+
+Co ten test udowadnia?
+
+Udowadnia, że oddzieliłeś widok (szablon tekstowy) od logiki (kod Java/Groovy). 
+To jest fundament architektury MVC. 
+W Javie generowanie takiego tekstu wymagałoby sklejania Stringów w pętlach (StringBuilder), 
+co jest mało czytelne. 
+Tutaj szablon wygląda prawie jak gotowy e-mail.
+
+
+
 Zadanie 4: Test Spocka (Regex & Templates)
+------------------------------------------
 
 Sprawdźmy, czy nasze wyrażenia regularne i szablony działają poprawnie.
+Stwórz `src/test/groovy/TextSpec.groovy`
 
-Stwórz src/test/groovy/TextSpec.groovy:
-
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import spock.lang.Specification
 
 class TextSpec extends Specification {
@@ -276,15 +339,23 @@ class TextSpec extends Specification {
         !email.contains("<%") // Upewniamy się, że kod szablonu zniknął
     }
 }
+```
+
 Dlaczego to jest ważne?
+Slashy Strings (/pattern/): 
+W Javie musisz pisać Pattern.compile("\\d+"). 
+W Groovy piszesz /\d+/. 
+Koniec z "piekłem backslashy".
 
-Slashy Strings (/pattern/): W Javie musisz pisać Pattern.compile("\\d+"). W Groovy piszesz /\d+/. Koniec z "piekłem backslashy".
+Extraction: 
+Wyciąganie danych (=~) w Groovy jest banalnie proste dzięki iteratorowi matcher.each { fullMatch, group1 -> ... }.
 
-Extraction: Wyciąganie danych (=~) w Groovy jest banalnie proste dzięki iteratorowi matcher.each { fullMatch, group1 -> ... }.
-
-Szablony: Wbudowany SimpleTemplateEngine to potężne narzędzie. Nie musisz zaciągać wielkich bibliotek jak Velocity czy Freemarker do prostych zadań.
+Szablony: 
+Wbudowany `SimpleTemplateEngine` to potężne narzędzie. 
+Nie musisz zaciągać wielkich bibliotek jak Velocity czy Freemarker do prostych zadań.
 
 Wyzwanie Finałowe Lab 15:
+-------------------------
 
 Twój szef chce prostego parsera plików konfiguracyjnych.
 
