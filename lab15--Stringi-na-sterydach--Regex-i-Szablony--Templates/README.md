@@ -168,9 +168,7 @@ class RegexValidationSpec extends Specification {
 ```
 
 Co dokładnie testujemy?
-
 Dla kodu pocztowego (\d{2}-\d{3}):
-
 Sprawdzamy dokładnie ten format: dwie cyfry, myślnik, trzy cyfry. Każde odstępstwo (litery, brak myślnika, zła długość) musi zwrócić false.
 
 Dla hasła ((?=.*\d)(?=.*[A-Z]).{8,}):
@@ -186,8 +184,10 @@ Uruchom ten test. Dzięki @Unroll w wynikach testów w IntelliJ zobaczysz piękn
 
 
 Zadanie 3: Template Engine – Generowanie e-maili
+------------------------------------------------
 
-Zamiast sklejać Stringi plusem ("Witaj " + name + "!"), użyjemy silnika szablonów. To podstawa generowania raportów, maili i konfiguracji.
+Zamiast sklejać Stringi plusem ("Witaj " + name + "!"), użyjemy silnika szablonów. 
+To podstawa generowania raportów, maili i konfiguracji.
 
 Dodaj do klasy RegexDemo:
 
