@@ -130,7 +130,8 @@ Konstrukcja wyjątku: Twój kod robi: "API_ERROR_404: [:]".
 
 ex.message.contains("[:]"): Sprawdzamy, czy ta mapa faktycznie została "doklejona" do wyjątku.
 
-Gdybyś łączył się z bardziej "gadatliwym" API, które zwraca np. {"reason": "Bad ID"}, w teście sprawdziłbyś po prostu: ex.message.contains("Bad ID").
+Gdybyś łączył się z bardziej "gadatliwym" API, które zwraca np. {"reason": "Bad ID"}, 
+    w teście sprawdziłbyś po prostu: ex.message.contains("Bad ID").
 
 
 Zadanie 7: Deep GPath (Praca z zagnieżdżonymi danymi)
@@ -203,23 +204,62 @@ def withRetry(int maxAttempts, Closure code) {
 
 
 // Użycie w teście:
-def "Zadanie 8: powinien ponowić zapytanie w razie awarii"() {
-when:
-def result = withRetry(3) {
-RestClientService.getPost(1)
-}
 
-    then:
-    result.id == 1
-}
+```groovy
+
+    def "Zadanie 8: powinien ponowić zapytanie w razie awarii"() {
+        when:
+        def result = withRetry(3) {
+            RestClientService.getPost(1)
+        }
+
+        then:
+        result.id == 1
+    }
+
+    def withRetry(int maxAttempts, Closure code) {
+        int attempts = 0
+        while (attempts < maxAttempts) {
+            try {
+                // Próba wykonania przekazanego kodu
+                return code()
+            } catch (Exception e) {
+                attempts++
+                println ">>> [RETRY] Próba $attempts nieudana (${e.message}). Ponawiam..."
+
+                // Jeśli wyczerpaliśmy limit prób, rzucamy błąd dalej
+                if (attempts >= maxAttempts) throw e
+
+                // Czekamy chwilę przed kolejną próbą (np. 500ms)
+                sleep(500)
+            }
+        }
+    }
+
+```
+
 Dlaczego te zadania są kluczowe?
 
-Asynchroniczność (Zadanie 5): Pozwala na drastyczne skrócenie czasu testów integracyjnych – zamiast pobierać 10 zasobów jeden po drugim, pobierasz je równolegle.
+Asynchroniczność (Zadanie 5):
+-----------------------------
+Pozwala na drastyczne skrócenie czasu testów integracyjnych – zamiast pobierać 10 zasobów jeden po drugim, 
+pobierasz je równolegle.
 
-Szczegóły błędów (Zadanie 6): W debugowaniu na produkcji informacja "400 Bad Request" to za mało. Musisz wiedzieć, że serwer dopisał: "Pole 'email' jest wymagane".
+Szczegóły błędów (Zadanie 6):
+-----------------------------
+W debugowaniu na produkcji informacja "400 Bad Request" to za mało. 
+Musisz wiedzieć, że serwer dopisał: "Pole 'email' jest wymagane".
 
-GPath i Transformacje (Zadanie 7): To pokazuje, dlaczego Groovy deklasuje Javę w testach API. Wyciągnięcie domen z maili w Javie to 5-10 linii kodu. W Groovy to jeden czytelny łańcuch.
+GPath i Transformacje (Zadanie 7):
+----------------------------------
+To pokazuje, dlaczego Groovy deklasuje Javę w testach API. 
+Wyciągnięcie domen z maili w Javie to 5-10 linii kodu. 
+W Groovy to jeden czytelny łańcuch.
 
-Closures (Zadanie 8): Mechanizm withRetry pokazuje, jak możesz tworzyć własne struktury kontrolne w języku, co jest fundamentem tworzenia DSL.
+Closures (Zadanie 8): 
+---------------------
+Mechanizm `withRetry` pokazuje, jak możesz tworzyć własne struktury kontrolne w języku, 
+co jest fundamentem tworzenia DSL.
 
-Spróbuj wdrożyć Zadanie 7 i 8 – są najbardziej "groovy-style". Czy chcesz, abym pomógł Ci z implementacją któregoś z nich?
+Spróbuj wdrożyć Zadanie 7 i 8 – są najbardziej "groovy-style". 
+Czy chcesz, abym pomógł Ci z implementacją któregoś z nich?

@@ -179,7 +179,8 @@ class RestApiSpec extends Specification {
     def "Zadanie 8: powinien ponowić zapytanie w razie awarii"() {
         when:
         def result = withRetry(3) {
-            RestClientService.getPost(1)
+            RestClientService.getPost(1)  // Closure przekazuje tutaj kod do wykonania
+                                             // można opakować dowolne wywołanie (nie tylko REST)
         }
 
         then:

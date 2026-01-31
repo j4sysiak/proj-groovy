@@ -1,5 +1,3 @@
-Treść Labu 14, dostosowana do Twojego środowiska (JDK 17 + Groovy 4).
-
 Lab 14: REST Client – Integracja Java HttpClient z Groovy
 ---------------------------------------------------------
 
