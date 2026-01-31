@@ -361,24 +361,137 @@ Twój szef chce prostego parsera plików konfiguracyjnych.
 
 Dostajesz tekst:
 
+```text
+    db.host=localhost
+    db.port=5432
+    # To jest komentarz
+    app.name=GroovyApp
+```
+
+Napisz metodę `parseConfig(String text)`, która użyje Regexa, aby:
+Ignorować linie zaczynające się od #.
+Wyciągnąć pary klucz i wartość (Regex: /(.+)=(.+)/).
+Zwróć wynik jako Map.
+Napisz test Spocka, który sprawdzi, czy map.db.port == "5432" oraz czy mapa nie zawiera klucza z komentarza.
+
+
+Rozwiązanie:
+------------
+
+Oto kompletne rozwiązanie Wyzwania Finałowego Lab 15.
+To zadanie łączy w sobie przetwarzanie tekstu linia po linii (eachLine) 
+z potęgą wyrażeń regularnych do ekstrakcji danych (=~).
+
+1. Rozwiązanie: Klasa ConfigParser
+Stwórz plik `src/main/groovy/ConfigParser.groovy` (lub dodaj tę metodę do istniejącej klasy RegexDemo).
+
+```groovy
+class ConfigParser {
+
+    static Map<String, String> parseConfig(String configText) {
+        def config = [:]
+
+        // Przetwarzamy tekst linia po linii
+        configText.eachLine { line ->
+            line = line.trim() // Usuwamy białe znaki z początku/końca
+
+            // 1. Ignorujemy puste linie i komentarze (zaczynające się od #)
+            if (line.isEmpty() || line.startsWith("#")) {
+                return // idź do następnej linii
+            }
+
+            // 2. Definiujemy Regex z dwiema grupami: (klucz)=(wartość)
+            def pattern = /(.+)=(.+)/
+            def matcher = (line =~ pattern)
+
+            // 3. Jeśli linia pasuje do wzorca, wyciągamy dane
+            if (matcher) {
+                // matcher[0] to całe dopasowanie
+                // matcher[0][1] to pierwsza grupa (klucz)
+                // matcher[0][2] to druga grupa (wartość)
+                def key = matcher[0][1].trim()
+                def value = matcher[0][2].trim()
+
+                config[key] = value
+            }
+        }
+
+        return config
+    }
+}
+```
+
+2. Test Spock: Weryfikacja parsera
+
+Stwórz plik src/test/groovy/ConfigParserSpec.groovy.
+
 code
-Text
+Groovy
 download
 content_copy
 expand_less
-db.host=localhost
-db.port=5432
-# To jest komentarz
-app.name=GroovyApp
+import spock.lang.Specification
 
-Napisz metodę parseConfig(String text), która użyje Regexa, aby:
+class ConfigParserSpec extends Specification {
 
-Ignorować linie zaczynające się od #.
+    def "powinien sparsować plik konfiguracyjny ignorując komentarze"() {
+        given: "tekst konfiguracyjny (np. wczytany z pliku)"
+        def rawConfig = """
+            db.host=localhost
+            db.port=5432
+            
+            # To jest komentarz - to powinno zostać pominięte
+            # Kolejny komentarz
+            
+            app.name=GroovyApp
+            timeout = 3000 
+        """
 
-Wyciągnąć pary klucz i wartość (Regex: /(.+)=(.+)/).
+        when: "parsujemy konfigurację"
+        def result = ConfigParser.parseConfig(rawConfig)
 
-Zwróć wynik jako Map.
+        then: "mapa zawiera poprawne pary klucz-wartość"
+        result['db.host'] == 'localhost'
+        result['db.port'] == '5432'
+        result['app.name'] == 'GroovyApp'
+        
+        and: "parser poradził sobie ze spacjami (dzięki .trim())"
+        result['timeout'] == '3000'
 
-Napisz test Spocka, który sprawdzi, czy map.db.port == "5432" oraz czy mapa nie zawiera klucza z komentarza.
+        and: "mapa ma rozmiar 4 (host, port, name, timeout)"
+        result.size() == 4
 
-Daj znać, jak poszło z Regexami! To umiejętność, która przydaje się w każdym języku, ale w Groovy jest wyjątkowo przyjemna.
+        and: "mapa NIE zawiera treści komentarzy"
+        !result.keySet().any { it.contains("komentarz") }
+    }
+}
+Analiza rozwiązania (Dlaczego to jest "Groovy Style"?):
+
+eachLine: Zamiast tworzyć BufferedReader, InputStreamReader i pętle while, metoda eachLine na Stringu robi to automatycznie.
+
+Regex Extraction (=~):
+
+matcher[0][1] – to esencja wygody Groovy'ego. W Javie musiałbyś robić matcher.find(), a potem matcher.group(1). Tutaj traktujesz wynik dopasowania jak tablicę wielowymiarową.
+
+Elastyczność mapy: Zapis config[key] = value jest znacznie czytelniejszy niż config.put(key, value).
+
+GRATULACJE! 🏁
+
+Dotarliśmy do samego końca.
+Przerobiłeś 15 Labów, które pokrywają cały ekosystem Groovy:
+
+Składnia i Kolekcje
+
+Testowanie (Spock)
+
+Integracja z Javą
+
+Bazy danych (SQL) i API (REST)
+
+Metaprogramowanie i DSL
+
+Wielowątkowość (GPars)
+
+Praca z tekstem (Regex/Templates)
+
+Jesteś teraz w pełni wyposażony, by pisać nowoczesny, zwięzły kod na platformie JVM.
