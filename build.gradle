@@ -28,6 +28,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'com.h2database:h2:2.1.214'
+
+    testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
+    // Jeśli nie masz Springa w projekcie, normalnie byś go tu miał.
+    // Zakładamy symulację lub dodaj: implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
 }
 
 test {
