@@ -19,28 +19,25 @@ dependencies {
 
 
 Krok 2: Symulacja komponentu Springa
-Stwórz src/main/groovy/MySpringBean.groovy:
+------------------------------------
 
-code
-Groovy
-download
-content_copy
-expand_less
+Stwórz `src/main/groovy/MySpringBean.groovy`
+
+```groovy
 import org.springframework.stereotype.Service
 
 @Service
 class CurrencyService {
 String getCurrency() { return "PLN" }
 }
+```
+
 
 Krok 3: Test ze Spring Context
-Stwórz src/test/groovy/SpringIntegrationSpec.groovy:
+------------------------------
+Stwórz test:  `src/test/groovy/SpringIntegrationSpec.groovy`
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import spock.lang.Specification
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -62,10 +59,17 @@ class SpringIntegrationSpec extends Specification {
         currencyService.getCurrency() == "PLN"
     }
 }
+```
 
-(Uwaga: Ten Lab wymaga, aby Twój projekt miał zależności Springa. Jeśli masz czysty projekt Groovy, Krok 3 może wymagać dodania bibliotek Spring Core/Context do build.gradle).
+
+Uwaga: 
+Ten Lab wymaga, aby Twój projekt miał zależności Springa. 
+Jeśli masz czysty projekt Groovy, Krok 3 może wymagać dodania bibliotek `Spring Core/Context` do build.gradle.
+
+
 
 Wyzwanie Finałowe (Lab 16-18):
+------------------------------
 
 Stwórz klasę DataImporter, która:
 

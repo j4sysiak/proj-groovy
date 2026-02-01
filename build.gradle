@@ -3,6 +3,12 @@ plugins {
     id 'groovy'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 group = 'org.example'
 version = '1.0-SNAPSHOT'
 
@@ -12,10 +18,10 @@ repositories {
 }
 
 dependencies {
-    // Silnik Groovy 4.0 (kompatybilny z JDK 17)
+    // Baza: Silnik Groovy 4.0 (kompatybilny z JDK 17)
     implementation 'org.apache.groovy:groovy-all:4.0.15'
 
-    // Spock Framework - zestaw dla Groovy 4.0
+    // Baza: Spock Framework - zestaw dla Groovy 4.0
     testImplementation platform('org.spockframework:spock-bom:2.3-groovy-4.0')
     testImplementation 'org.spockframework:spock-core'
 
@@ -24,14 +30,28 @@ dependencies {
     // Dodaj Byte\-Buddy, aby Spock mógł tworzyć Spy/Mock dla klas (nie tylko interfejsów)
     implementation("net.bytebuddy:byte-buddy:1.18.4")
 
+    implementation 'io.github.http-builder-ng:http-builder-ng-core:1.0.4'
+
     // Potrzebne do uruchamiania testów Spock (opartych na JUnit 5)
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    implementation 'com.h2database:h2:2.1.214'
+    implementation 'com.h2database:h2:2.2.224'
 
+    // --- NOWE: Spring Boot Core (Dla @Service, @Component, @Autowired) ---
+    // Używamy wersji 3.x, która wymaga Javy 17 (którą masz)
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.1'
+
+    // --- NOWE: Spring Boot Test (Dla @SpringBootTest, @MockBean) ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.1'
+
+    // --- NOWE: Spock + Spring Integration (Kluczowe dla Lab 18!) ---
+    // To pozwala Spockowi rozumieć kontekst Springa
     testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
+
+
     // Jeśli nie masz Springa w projekcie, normalnie byś go tu miał.
-    // Zakładamy symulację lub dodaj: implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
+    // Zakładamy symulację lub dodaj:
+    implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
 }
 
 test {
