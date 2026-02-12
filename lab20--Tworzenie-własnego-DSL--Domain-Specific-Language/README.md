@@ -99,11 +99,7 @@ Krok 3: Test Spocka (Weryfikacja DSL)
 To zadanie pokaże Ci, jak pięknie wygląda teraz tworzenie zamówień. 
 Stwórz `src/test/groovy/DslSpec.groovy`
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 import spock.lang.Specification
 
 class DslSpec extends Specification {
@@ -129,37 +125,173 @@ class DslSpec extends Specification {
         myOrder.toString().contains("Jan Kowalski")
     }
 }
+```
+
 Co tu się wydarzyło? (Analiza mechanizmu)
 
-delegate: To najważniejszy koncept. Kiedy w bloku { ... } piszesz client "Jan", Groovy normalnie szukałby metody client w klasie testowej (gdzie jej nie ma). My jednak mówimy: "Hej, delegatem tego bloku jest OrderBuilder".
+delegate: 
+To najważniejszy koncept. 
+Kiedy w bloku { ... } piszesz client "Jan", Groovy normalnie szukałby metody client w klasie testowej (gdzie jej nie ma). 
+My jednak mówimy: "Hej, delegatem tego bloku jest OrderBuilder".
 
-resolveStrategy = DELEGATE_FIRST: Mówimy Groovy'emu: "Najpierw szukaj metod w Builderze, a dopiero potem w otoczeniu". To pozwala na używanie tych samych nazw metod bez konfliktów.
+resolveStrategy = DELEGATE_FIRST: 
+Mówimy Groovy'emu: "Najpierw szukaj metod w Builderze, a dopiero potem w otoczeniu". 
+To pozwala na używanie tych samych nazw metod bez konfliktów.
 
-Brak nawiasów: W Groovy, jeśli metoda ma parametry, możesz pominąć nawiasy: client "Jan" zamiast client("Jan"). To sprawia, że kod wygląda jak plik konfiguracyjny.
+Brak nawiasów: 
+W Groovy, jeśli metoda ma parametry, możesz pominąć nawiasy: client "Jan" zamiast client("Jan"). 
+To sprawia, że kod wygląda jak plik konfiguracyjny.
 
 Wyzwanie Finałowe Lab 20:
+------------------------
 
 Rozbuduj swój DSL o zagnieżdżone kategorie. Chcemy, aby można było pisać tak:
 
-code
-Groovy
-download
-content_copy
-expand_less
+```groovy
 OrderBuilder.make {
+    
+  client "Anna Nowak"
+  category("Elektronika") {
+      item "Telefon", 2000
+      item "Etui", 50
+  }
+    
+}
+```
+
+
+Rozwiązanie zadania:
+--------------------
+
+To zadanie to prawdziwy sprawdzian Twoich umiejętności architektonicznych w Groovym. 
+Zagnieżdżone bloki wymagają od Buildera umiejętności zarządzania swoim stanem wewnętrznym.
+
+Oto jak zrealizować to wyzwanie krok po kroku.
+
+1. Aktualizacja Modelu (OrderModel.groovy)
+------------------------------------------
+
+Dodajemy pole `category` do klasy `OrderItem`, aby wiedzieć, do której sekcji produkt został przypisany.
+
+```groovy
+import groovy.transform.ToString
+
+@ToString
+class OrderItem {
+String name
+double price
+String category // Dodane pole
+}
+
+@ToString
+class FinalOrder {
+String customerName
+List<OrderItem> items = []
+
+double getTotal() { items.price.sum() ?: 0 }
+}
+```
+
+2. Aktualizacja Buildera (OrderBuilder.groovy)
+----------------------------------------------
+
+Tutaj dzieje się magia. 
+Wprowadzamy pole `activeCategory`, które przechowuje nazwę aktualnie otwartego bloku. 
+Zastosujemy technikę "Save and Restore", aby obsłużyć poprawne zagnieżdżanie.
+
+```groovy
+class OrderBuilder {
+private FinalOrder order = new FinalOrder()
+private String activeCategory = "Ogólna" // Domyślna kategoria
+
+    void client(String name) {
+        order.customerName = name
+    }
+
+    // Zmieniona metoda item - teraz korzysta z activeCategory
+    void item(String name, double price) {
+        order.items << new OrderItem(name: name, price: price, category: activeCategory)
+    }
+
+    // NOWA METODA: Obsługa bloku category
+    void category(String name, @DelegatesTo(value = OrderBuilder, strategy = Closure.DELEGATE_FIRST) Closure code) {
+        // 1. Zapamiętujemy poprzednią kategorię (ważne przy głębokim zagnieżdżaniu!)
+        def previousCategory = activeCategory
+        
+        // 2. Ustawiamy nową kategorię dla elementów wewnątrz tego bloku
+        activeCategory = name
+        
+        // 3. Wykonujemy blok kodu (ponownie delegujemy do tego samego buildera)
+        code.delegate = this
+        code.resolveStrategy = Closure.DELEGATE_FIRST
+        code()
+        
+        // 4. PRZYWRACAMY poprzednią kategorię po wyjściu z klamerek
+        activeCategory = previousCategory
+    }
+
+    static FinalOrder make(@DelegatesTo(value = OrderBuilder, strategy = Closure.DELEGATE_FIRST) Closure code) {
+        def builder = new OrderBuilder()
+        code.delegate = builder
+        code.resolveStrategy = Closure.DELEGATE_FIRST
+        code()
+        return builder.order
+    }
+}
+```
+
+3. Test w Spocku (DslSpec.groovy)
+---------------------------------
+
+Teraz sprawdzimy, czy produkty "pamiętają", w jakiej kategorii zostały stworzone.
+
+```groovy
+def "powinien utworzyć zamówienie z zagnieżdżonymi kategoriami"() {
+when:
+def myOrder = OrderBuilder.make {
 client "Anna Nowak"
-category("Elektronika") {
-item "Telefon", 2000
-item "Etui", 50
+
+        category("Elektronika") {
+            item "Telefon", 2000
+            item "Etui", 50
+        }
+        
+        category("Dom") {
+            item "Lampa", 120
+        }
+
+        item "Torba na zakupy", 5 // To wpadnie do kategorii domyślnej ("Ogólna")
+    }
+
+    then: "sprawdzamy poprawność przypisania kategorii"
+    myOrder.customerName == "Anna Nowak"
+    myOrder.items.size() == 4
+
+    and: "produkty z elektroniki mają poprawną kategorię"
+    def elektronika = myOrder.items.findAll { it.category == "Elektronika" }
+    elektronika.size() == 2
+    elektronika.name.containsAll(["Telefon", "Etui"])
+
+    and: "produkt poza blokiem ma kategorię domyślną"
+    myOrder.items.find { it.name == "Torba na zakupy" }.category == "Ogólna"
+    
+    and: "całkowity koszt się zgadza"
+    myOrder.total == 2175
 }
-}
+```
 
-Twoje zadania:
+Dlaczego to rozwiązanie jest profesjonalne?
 
-Dodaj pole String currentCategory do OrderItem.
+Zasada Stack (Stosu): 
+Przechowywanie `previousCategory` i przywracanie go po wykonaniu domknięcia to technika, która pozwala na nieskończone zagnieżdżanie 
+(kategoria wewnątrz kategorii). To dokładnie tak działają profesjonalne DSL-e.
 
-W OrderBuilder stwórz metodę category(String name, Closure cl).
+Fluent API: 
+Dzięki temu, że `category` deleguje z powrotem do OrderBuilder, wewnątrz klamerek masz dostęp do tych samych metod (item), 
+ale działają one w innym kontekście (zmienił się stan pola activeCategory).
 
-Wewnątrz tej metody ustaw tymczasowo kategorię, wykonaj blok cl (zmień delegata!), a po jego zakończeniu wyczyść kategorię.
+Readability: 
+Zauważ, jak czysto wygląda teraz tworzenie danych. 
+Zamiast tworzyć obiekty new Item(...), pisać listy, dodawać je do zamówienia – piszesz to jak wiersz lub plik konfiguracyjny.
 
-Daj znać, czy udało Ci się "zagnieździć" kategorie! To jest test na prawdziwego Architekta Groovy.
+ 

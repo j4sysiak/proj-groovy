@@ -4,6 +4,7 @@ import groovy.transform.ToString
 class OrderItem {
     String name
     double price
+    String category // Dodane pole
 }
 
 @ToString
