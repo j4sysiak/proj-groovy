@@ -11,6 +11,23 @@ class OrderIntegrationSpec extends Specification {
     @Autowired
     OrderProcessingService orderService
 
+    def "Weryfikacja wstrzykiwania"() {
+        expect: "Spring powinien wstrzyknąć serwis"
+        orderService != null
+    }
+
+    def "powinien przetworzyć zamówienia"() {
+        given:
+        def orders = [[id: 1, amount: 200]]
+
+        when:
+        if (orderService == null) throw new IllegalStateException("Serwis nadal jest NULLEM! Sprawdź build.gradle i spock-spring")
+        def result = orderService.processOrders(orders)
+
+        then:
+        result == 200
+    }
+
     def "powinien przetworzyć zamówienia, odrzucić małe kwoty i zostawić ślad w audycie"() {
         given: "lista zamówień (Mapy udające obiekty DTO)"
         def orders = [
