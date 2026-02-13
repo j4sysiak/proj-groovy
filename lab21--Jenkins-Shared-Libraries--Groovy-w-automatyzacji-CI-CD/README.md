@@ -153,10 +153,12 @@ Dzięki Groovy możesz przetestować logikę rurociągu lokalnie w Spocku, oszcz
 
 
 Wyzwanie Finałowe Lab 21:
+-------------------------
+Stwórz nowy krok w vars/ o nazwie `notify.groovy`.
 
-Stwórz nowy krok w vars/ o nazwie notify.groovy.
+Metoda call powinna przyjmować Mapę z kluczami: 
 
-Metoda call powinna przyjmować Mapę z kluczami: status (np. 'SUCCESS', 'FAILURE') oraz channel (np. '#alerts').
+status (np. 'SUCCESS', 'FAILURE') oraz channel (np. '#alerts').
 
 Jeśli status to FAILURE, niech wypisuje: [SLACK] Wysyłam alert do #alerts: Build FAILED!.
 
@@ -165,3 +167,94 @@ Jeśli status to SUCCESS, niech wypisuje: [SLACK] Build OK.
 Napisz test Spocka, który sprawdzi oba scenariusze.
 
 Daj znać, jak poszło z Twoim pierwszym "krokiem" DevOpsowym! To umiejętność bardzo poszukiwana na rynku.
+
+
+Rozwiązanie wyzwania:
+
+Oto kompletne rozwiązanie Wyzwania Finałowego Lab 21.
+
+Zauważ, że w świecie Jenkins Shared Libraries (JSL), 
+pliki w folderze vars (które my symulujemy w src/main/groovy) są traktowane jak singletony. 
+Wywołanie notify(...) w Jenkinsie to pod spodem wywołanie metody call w tym pliku.
+
+1. Implementacja kroku powiadomień `src/main/groovy/notify.groovy`
+
+Stwórz ten plik. 
+Zwróć uwagę na domyślne wartości w mapie – to dobra praktyka, by skrypt nie wybuchł, gdy ktoś zapomni podać kanał.
+
+```groovy
+/**
+* Symulacja globalnego kroku Jenkinsa (vars/notify.groovy)
+  */
+  def call(Map config = [:]) {
+  // Pobieramy parametry z mapy lub ustawiamy domyślne
+  def status = config.status ?: 'SUCCESS'
+  def channel = config.channel ?: '#general'
+  def message = ""
+
+  if (status == 'FAILURE') {
+  message = "[SLACK] Alert w kanale ${channel}: Build FAILED!"
+  } else {
+  message = "[SLACK] Build OK"
+  }
+
+  // W Jenkinsie to wypisze się w Console Output buildu
+  println message
+
+  // Zwracamy wiadomość, aby ułatwić testowanie w Spocku
+  return message
+  }
+```
+
+2. Rozbudowa testu Spock `src/test/groovy/JenkinsLibrarySpec.groovy`
+
+Dodajmy testy, które sprawdzą oba scenariusze (sukces i porażkę) oraz zachowanie domyślne.
+
+```groovy
+import spock.lang.Specification
+import pl.devops.VersionTool
+
+class JenkinsLibrarySpec extends Specification {
+
+    def "VersionTool powinien generować poprawny format snapshotu (Modern Java Time)"() {
+        expect:
+        // Sprawdzamy czy format to: 1.0-SNAPSHOT-8cyfr
+        VersionTool.getSnapshotVersion("1.0") ==~ /1.0-SNAPSHOT-\d{8}/
+    }
+
+    def "notify powinien poprawnie generować komunikaty dla Slacka"() {
+        given: "nasz globalny krok notify"
+        def notify = new notify()
+
+        expect: "komunikat błędu zawiera kanał i status"
+        notify.call(status: 'FAILURE', channel: '#dev-alerts') == "[SLACK] Alert w kanale #dev-alerts: Build FAILED!"
+
+        and: "komunikat sukcesu jest prosty"
+        notify.call(status: 'SUCCESS') == "[SLACK] Build OK"
+
+        and: "domyślny kanał jest używany, gdy go nie podamy"
+        notify.call(status: 'FAILURE') == "[SLACK] Alert w kanale #general: Build FAILED!"
+    }
+}
+```
+
+Dlaczego to rozwiązanie jest "Senior DevOps Practice"?
+
+Metoda call: 
+To standard Jenkinsa. 
+Dzięki temu w Jenkinsfile programista pisze po prostu notify(status: 'FAILURE'), a Groovy pod spodem wie, 
+że ma uruchomić metodę call.
+
+Elvis Operator (?:): 
+Użycie config.status ?: 'SUCCESS' to najbezpieczniejszy sposób na obsługę opcjonalnych parametrów w skryptach Groovy.
+
+Regex w teście (==~): 
+Zastosowanie /...-\d{8}/ pozwala przetestować datę w wersji, 
+nawet jeśli nie znamy dokładnej dzisiejszej daty (sprawdzamy format, a nie konkretną wartość).
+
+Separacja logiki: 
+Zauważ, że VersionTool (logika biznesowa) jest w pakiecie pl.devops, 
+a notify (krok rurociągu) jest luźnym skryptem. 
+To idealnie oddaje strukturę Jenkins Shared Libraries.
+
+
