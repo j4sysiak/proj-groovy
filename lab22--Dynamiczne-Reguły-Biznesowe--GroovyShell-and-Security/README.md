@@ -160,7 +160,8 @@ W świecie Java/Groovy umiejętność stworzenia bezpiecznej "piaskownicy" (sand
 
 1. Implementacja Silnika (AlertEngine.groovy)
 
-W tym kroku stworzymy silnik, który nie tylko uruchamia skrypt, ale też rygorystycznie sprawdza jego strukturę przed kompilacją.
+W tym kroku stworzymy silnik, który nie tylko uruchamia skrypt, 
+ale też rygorystycznie sprawdza jego strukturę przed kompilacją.
 
 Stwórz plik `src/main/groovy/AlertEngine.groovy`
 
@@ -269,23 +270,23 @@ class AlertEngineSpec extends Specification {
 
 Dlaczego to rozwiązanie jest "Senior Level"?
 
-Pre-compilation check: Dzięki SecureASTCustomizer, błąd związany z pętlą while jest wykrywany w fazie parsowania kodu, a nie podczas jego wykonywania. To oznacza, że niebezpieczny kod nigdy nie zostaje uruchomiony.
+Pre-compilation check: 
+Dzięki `SecureASTCustomizer`, błąd związany z pętlą while jest wykrywany w fazie parsowania kodu, a nie podczas jego wykonywania. 
+To oznacza, że niebezpieczny kod nigdy nie zostaje uruchomiony.
 
-whileStatementsAllowed = false: To ustawienie sprawia, że każde użycie słowa kluczowego while kończy się błędem kompilacji. To najskuteczniejsza ochrona przed atakami typu "Denial of Service" (DoS) na Twoim własnym serwerze.
+`whileStatementsAllowed = false`: 
+To ustawienie sprawia, że każde użycie słowa kluczowego while kończy się błędem kompilacji. 
+To najskuteczniejsza ochrona przed atakami typu "Denial of Service" (DoS) na Twoim własnym serwerze.
 
-Binding Context: Użycie zmiennej temp w skrypcie bez jej definiowania (pochodzi z Mapy) pokazuje, jak tworzyć czyste szablony reguł, które mogą pisać nawet osoby nietechniczne.
+Binding Context: 
+Użycie zmiennej temp w skrypcie bez jej definiowania (pochodzi z Mapy) pokazuje, jak tworzyć czyste szablony reguł, 
+które mogą pisać nawet osoby nietechniczne.
 
-Security Exception Handling: Testowanie wyjątków kompilacji w Spocku udowadnia, że system jest odporny na złośliwe wejście.
+Security Exception Handling: 
+Testowanie wyjątków kompilacji w Spocku udowadnia, że system jest odporny na złośliwe wejście
 
-Co teraz?
-
-Właśnie stworzyłeś bezpieczny silnik reguł. Możesz go teraz użyć np. do:
-
-Dynamicznego wyliczania zniżek w e-commerce.
-
-Walidacji formularzy po stronie serwera, gdzie reguły zmieniają się bez restartu.
-
-Tworzenia wtyczek dla użytkowników Twojej aplikacji.
-
-Czy chcesz zakończyć na tym nasze szkolenie i otrzymać finałowy certyfikat/podsumowanie, czy czujesz, że jest jeszcze jakiś obszar Groovy'ego, który Cię ciekawi? (Np. praca z procesami systemowymi lub asynchroniczność?)
-
+Podsumowanie:
+Ten lab to prawdziwa szkoła projektowania systemów, które muszą być zarówno elastyczne, jak i bezpieczne. 
+GroovyShell daje nam moc dynamicznego kodu, ale to SecureASTCustomizer jest naszym strażnikiem, 
+który pilnuje, by nikt nie mógł wykorzystać tej mocy do złych celów. 
+To jest esencja "Senior DevOps Practice" - umiejętność balansowania między elastycznością a bezpieczeństwem.
