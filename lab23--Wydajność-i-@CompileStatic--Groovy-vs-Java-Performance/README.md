@@ -185,20 +185,16 @@ def input = ['A', 'B', 'C', 'D', 'E']
 
 Dlaczego to jest "Ekspercka Praktyka" (The Practice)?
 
-Bytecode Identical to Java: Gdybyś zdekompilował tę metodę do czystej Javy, zobaczyłbyś dokładnie taki sam kod, jaki napisałbyś ręcznie w Javie. Nie ma tu żadnego narzutu "runtime" Groovy'ego.
+Bytecode Identical to Java: 
+Gdybyś zdekompilował tę metodę do czystej Javy, zobaczyłbyś dokładnie taki sam kod, jaki napisałbyś ręcznie w Javie. 
+Nie ma tu żadnego narzutu "runtime" Groovy'ego.
 
-Unikanie String Concatenation w pętli: W Groovy (podobnie jak w Javie) zapis str += s wewnątrz pętli tworzy za każdym razem nowy obiekt String. Przy 10 000 iteracji zabije to wydajność. Użycie StringBuilder w połączeniu z @CompileStatic to najszybszy możliwy sposób łączenia tekstów na maszynie JVM.
+Unikanie String Concatenation w pętli: 
+W Groovy (podobnie jak w Javie) zapis str += s wewnątrz pętli tworzy za każdym razem nowy obiekt String. 
+Przy 10 000 iteracji zabije to wydajność. Użycie StringBuilder w połączeniu z @CompileStatic to najszybszy możliwy sposób łączenia tekstów na maszynie JVM.
 
-Bezpieczeństwo Typów: Gdybyś wewnątrz metody oznaczonej @CompileStatic próbował wywołać nieistniejącą metodę (np. sb.add(s) zamiast append), kompilator zgłosi błąd zanim w ogóle uruchomisz test. W dynamicznym Groovym błąd wystąpiłby dopiero podczas działania programu.
+Bezpieczeństwo Typów: 
+Gdybyś wewnątrz metody oznaczonej `@CompileStatic` próbował wywołać nieistniejącą metodę (np. sb.add(s) zamiast append), 
+kompilator zgłosi błąd zanim w ogóle uruchomisz test. 
+W dynamicznym Groovym błąd wystąpiłby dopiero podczas działania programu.
 
-Co teraz?
-
-Lab 23 za nami – wiesz już, jak kontrolować wydajność. Teraz czas na coś, co drastycznie przyspieszy Twoją pracę z testami.
-
-Lab 24: Test Data Builders (ObjectGraphBuilder)
-
-W dużych systemach klasy są zagnieżdżone: Klient ma Adresy, Adres ma Kraj, Klient ma też Zamówienia. Tworzenie takich struktur w testach za pomocą new ... to dziesiątki linii nudnego kodu.
-
-Nauczę Cię, jak użyć wbudowanego ObjectGraphBuilder, aby tworzyć całe drzewa obiektów w kilka sekund.
-
- 
