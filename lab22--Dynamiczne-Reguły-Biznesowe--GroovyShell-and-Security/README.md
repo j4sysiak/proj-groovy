@@ -142,10 +142,150 @@ Skrypt od użytkownika ma sprawdzać temperaturę i zwracać String: "NORMAL", "
 
 Przykład skryptu: if (temp > 50) return "DANGER" else return "NORMAL".
 
-Napisz test w Spocku, który prześle do SecureDiscountEngine (możesz go nazwać AlertEngine) temperaturę 60 stopni i sprawdzi, czy wynik to "DANGER".
+Napisz test w Spocku, który prześle do `SecureDiscountEngine` (możesz go nazwać AlertEngine) temperaturę 60 stopni 
+    i sprawdzi, czy wynik to "DANGER".
 
-Dodaj do SecureASTCustomizer zakaz używania słowa kluczowego while (aby zapobiec nieskończonym pętlom, które zawieszą serwer).
+Dodaj do `SecureASTCustomizer` zakaz używania słowa kluczowego while (aby zapobiec nieskończonym pętlom, 
+które zawieszą serwer).
 
-Podpowiedź: secure.whileAnswers = false.
+Podpowiedź: `secure.whileAnswers = false`
 
-To jest zadanie na poziomie architektonicznym. Daj znać, jak poszło z blokowaniem pętli while!
+Oto kompletne rozwiązanie Wyzwania Finałowego Lab 22.
+-----------------------------------------------------
+
+To wyzwanie to prawdziwa szkoła projektowania systemów bezpiecznych i elastycznych. 
+W świecie Java/Groovy umiejętność stworzenia bezpiecznej "piaskownicy" (sandbox) dla skryptów jest kluczowa, by zapobiec atakom typu `Code Injection`.
+
+
+
+1. Implementacja Silnika (AlertEngine.groovy)
+
+W tym kroku stworzymy silnik, który nie tylko uruchamia skrypt, ale też rygorystycznie sprawdza jego strukturę przed kompilacją.
+
+Stwórz plik `src/main/groovy/AlertEngine.groovy`
+
+```groovy
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer
+import groovy.lang.Binding
+import groovy.lang.GroovyShell
+
+class AlertEngine {
+
+    static String evaluateAlert(String scriptSource, Map context) {
+        // 1. Konfiguracja bezpiecznego Customizera
+        def secure = new SecureASTCustomizer()
+        
+        secure.with {
+            // Blokada groźnych klas (Sandbox)
+            receiversClassesBlackList = [System, Runtime, File, Thread, Object] as List
+            
+            // Blokada importów
+            indirectImportCheckEnabled = true
+            
+            // WYZWANIE: Blokada pętli while (zapobieganie zawieszeniu procesora)
+            whileStatementsAllowed = false
+            
+            // Dobra praktyka: blokujemy też inne pętle dla pełnego bezpieczeństwa
+            forStatementsAllowed = false
+        }
+
+        // 2. Podpięcie customizera do konfiguracji kompilatora
+        def config = new CompilerConfiguration()
+        config.addCompilationCustomizers(secure)
+
+        // 3. Przygotowanie danych i uruchomienie
+        def binding = new Binding(context)
+        def shell = new GroovyShell(binding, config)
+
+        // Evaluate zwraca wynik ostatniej instrukcji skryptu
+        return shell.evaluate(scriptSource).toString()
+    }
+}
+```
+
+2. Test Spock (AlertEngineSpec.groovy)
+
+W teście sprawdzimy zarówno poprawną logikę biznesową, jak i skuteczność naszych zabezpieczeń.
+
+Stwórz plik `src/test/groovy/AlertEngineSpec.groovy`
+
+```groovy
+import spock.lang.Specification
+import spock.lang.Unroll
+import org.codehaus.groovy.control.MultipleCompilationErrorsException
+
+class AlertEngineSpec extends Specification {
+
+    @Unroll
+    def "powinien zwrócić status #expectedStatus dla temperatury #temperature"() {
+        given: "skrypt reguły temperaturowej"
+        def script = """
+            if (temp > 50) return "DANGER"
+            else if (temp > 30) return "WARM"
+            else return "NORMAL"
+        """
+
+        expect: "silnik poprawnie ocenia warunki"
+        AlertEngine.evaluateAlert(script, [temp: temperature]) == expectedStatus
+
+        where:
+        temperature || expectedStatus
+        60          || "DANGER"
+        40          || "WARM"
+        20          || "NORMAL"
+    }
+
+    def "powinien zablokować skrypt zawierający niedozwoloną pętlę while"() {
+        given: "złośliwy skrypt z nieskończoną pętlą"
+        def evilScript = """
+            def x = 0
+            while(true) { 
+                x++ 
+            }
+            return "DONE"
+        """
+
+        when: "próbujemy uruchomić skrypt"
+        AlertEngine.evaluateAlert(evilScript, [temp: 10])
+
+        then: "kompilator rzuca błąd zanim skrypt w ogóle wystartuje"
+        // W Groovy 4 błąd składni/bezpieczeństwa to MultipleCompilationErrorsException
+        thrown(MultipleCompilationErrorsException)
+    }
+
+    def "powinien zablokować próbę użycia System.exit()"() {
+        given: "skrypt próbujący wyłączyć serwer"
+        def hack = "System.exit(0)"
+
+        when:
+        AlertEngine.evaluateAlert(hack, [temp: 10])
+
+        then:
+        thrown(Exception)
+    }
+}
+```
+
+Dlaczego to rozwiązanie jest "Senior Level"?
+
+Pre-compilation check: Dzięki SecureASTCustomizer, błąd związany z pętlą while jest wykrywany w fazie parsowania kodu, a nie podczas jego wykonywania. To oznacza, że niebezpieczny kod nigdy nie zostaje uruchomiony.
+
+whileStatementsAllowed = false: To ustawienie sprawia, że każde użycie słowa kluczowego while kończy się błędem kompilacji. To najskuteczniejsza ochrona przed atakami typu "Denial of Service" (DoS) na Twoim własnym serwerze.
+
+Binding Context: Użycie zmiennej temp w skrypcie bez jej definiowania (pochodzi z Mapy) pokazuje, jak tworzyć czyste szablony reguł, które mogą pisać nawet osoby nietechniczne.
+
+Security Exception Handling: Testowanie wyjątków kompilacji w Spocku udowadnia, że system jest odporny na złośliwe wejście.
+
+Co teraz?
+
+Właśnie stworzyłeś bezpieczny silnik reguł. Możesz go teraz użyć np. do:
+
+Dynamicznego wyliczania zniżek w e-commerce.
+
+Walidacji formularzy po stronie serwera, gdzie reguły zmieniają się bez restartu.
+
+Tworzenia wtyczek dla użytkowników Twojej aplikacji.
+
+Czy chcesz zakończyć na tym nasze szkolenie i otrzymać finałowy certyfikat/podsumowanie, czy czujesz, że jest jeszcze jakiś obszar Groovy'ego, który Cię ciekawi? (Np. praca z procesami systemowymi lub asynchroniczność?)
+
