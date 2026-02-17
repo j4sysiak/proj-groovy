@@ -137,7 +137,7 @@ To tylko jedna linijka wewnątrz klamerek, a nie nowa zmienna i wywołania sette
 Wyzwanie Finał owe Lab 24:
 --------------------------
 
-Stwórz model dla Biblioteki:
+Stwórz model dla Biblioteki (library) 
 Klasa Library ma pole name i listę books.
 Klasa Book ma pole title i obiekt Author.
 Klasa Author ma pole lastName.
@@ -146,12 +146,12 @@ Zadanie:
 Użyj `ObjectGraphBuilder`, aby stworzyć bibliotekę "Książnica" z dwiema książkami tego samego autora (np. Lem).
 
 W teście Spocka sprawdź:
-
-Czy biblioteka ma 2 książki.
-Czy obie książki mają tego samego autora (sprawdź referencję do obiektu).
+1. Czy biblioteka ma 2 książki.
+2. Czy obie książki mają tego samego autora (sprawdź referencję do obiektu).
 
 Bonus: 
-Użyj identyfikatorów w builderze (atrybut id), aby przypisać tego samego autora do obu książek bez tworzenia go dwa razy.
+Użyj identyfikatorów w builderze (atrybut id), 
+aby przypisać tego samego autora do obu książek bez tworzenia go dwa razy.
 
 Podpowiedź: 
 author(id: 'lem', lastName: 'Lem') a potem w drugiej książce author(refId: 'lem').
@@ -210,7 +210,7 @@ class LibraryBuilderSpec extends Specification {
     def "powinien stworzyć bibliotekę z wieloma książkami tego samego autora używając refId"() {
         given: "inicjalizacja buildera"
         def builder = new ObjectGraphBuilder()
-        // builder.classNameResolver = "twój.pakiet" // opcjonalnie
+        builder.classNameResolver = "model" // Ustawiamy pakiet, w którym są nasze klasy
 
         when: "budujemy graf obiektów z użyciem identyfikatorów"
         Library mojaBiblioteka = builder.library(name: 'Książnica') {
@@ -248,7 +248,7 @@ W bazach danych (JPA/Hibernate) bardzo ważne jest, abyś nie tworzył dwóch ko
 Używając `id` i `refId`, Twój graf obiektów w testach zachowuje się dokładnie tak, jak dane zaciągnięte z prawdziwej bazy danych.
 
 Zwięzłość: 
-Wyobraź sobie, że masz 10 książek Lema. 
+Wyobraź sobie, że masz 100 książek Lema. 
 Zamiast za każdym razem pisać author(lastName: 'Lem'), piszesz to raz, a potem tylko author(refId: 'lem').
 
 Tożsamość (is()): Metoda is() to odpowiednik == w Javie dla obiektów (porównanie referencji). 

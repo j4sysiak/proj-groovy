@@ -52,6 +52,10 @@ dependencies {
     // Jeśli nie masz Springa w projekcie, normalnie byś go tu miał.
     // Zakładamy symulację lub dodaj:
     implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
+
+    // CLI oparty jest na potężnej bibliotece Picocli
+    // Ta biblioteka pozwala tworzyć interfejsy wiersza poleceń z minimalnym nakładem kodu
+    testImplementation 'org.apache.groovy:groovy-cli-picocli:4.0.15'
 }
 
 test {
@@ -62,6 +66,8 @@ test {
         events "passed", "skipped", "failed"
     }
 }
+
+
 // lab6_automatyzacja
 // Rejestrujemy nowy task o nazwie 'generateBuildInfo'
 tasks.register('generateBuildInfo') {
@@ -100,13 +106,10 @@ tasks.register('generateBuildInfo2') {
         def testsFound = testFolder.exists() ? "TAK" : "NIE"
 
         // 2. Safe Navigation Operator (?.) - Zadanie: Wykorzystanie bezpiecznej nawigacji
-        // Próbujemy pobrać właściwość 'custom.env', która może nie istnieć.
-        // Jeśli nie istnieje, bezpiecznie przechodzimy do toUpperCase() (które się nie wykona)
-        // a operator elvis (?:) podstawi wartość domyślną.
         def envTag = System.getProperty('custom.env')?.toUpperCase() ?: "DEVELOPMENT"
 
         // 3. Budowanie treści raportu (GString + interpolacja)
-        def reportFile = file("${layout.buildDirectory.get()}/final-report.txt")
+        def reportFile = new File(buildDir, "final-report.txt")
 
         def reportContent = """
             =========================================
@@ -131,5 +134,26 @@ tasks.register('generateBuildInfo2') {
         println ">>> Lokalizacja: ${reportFile.absolutePath}"
         println ">>> Wynik testów w raporcie: ${testsFound}"
         println "------------------------------------------"
+    }
+}
+
+// Dodaj ten import na samej górze pliku (jeśli go nie ma)
+import org.gradle.api.tasks.JavaExec
+
+// ... (reszta pliku bez zmian) ...
+
+tasks.register('runLogAnalyzer', JavaExec) {
+    group = 'Execution'
+    description = 'Uruchamia LogAnalyzer z parametrami przy użyciu Java 17'
+
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('LogAnalyzer')
+
+    // WYMUSZENIE JAVA 17: Mówimy taskowi, żeby pobrał javę z toolchaina projektu
+    def toolchainService = project.extensions.getByType(JavaToolchainService)
+    javaLauncher.set(toolchainService.launcherFor(java.toolchain))
+
+    if (project.hasProperty('appArgs')) {
+        args(project.getProperty('appArgs').split('\\s+'))
     }
 }
