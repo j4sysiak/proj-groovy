@@ -161,8 +161,8 @@ Nigdy nie pisz "pomocy" ręcznie jako println!
 
 
 
-Wyzwanie Finałowe Lab 25:
--------------------------
+Wyzwanie Finałowe Lab 25: Narzędzie "LogMasker"
+-----------------------------------------------
 
 Stwórz narzędzie FileShredder (bezpieczne usuwanie plików).
 
@@ -174,4 +174,225 @@ Flaga -f (force) – jeśli nie podana, skrypt pyta o potwierdzenie (w teście m
 
 Zadanie: Napisz test Spocka, który zweryfikuje, czy flaga d jest poprawnie rozpoznawana jako boolean (użyj opts.d w if).
 
-Daj znać, jak poszło z Twoim pierwszym profesjonalnym narzędziem CLI! Czy Twój skrypt wyświetla już piękną pomoc po wpisaniu --help?
+
+Rozwiązanie:
+------------
+
+Skoro masz już działający mechanizm w Gradle i terminalu, to czas na Wyzwanie Finałowe Lab 25, 
+które przetestuje Twoje umiejętności tworzenia narzędzi przydatnych w codziennej pracy programisty/DevOpsa.
+
+Stworzymy narzędzie `LogMasker`, które służy do anonimizacji logów.
+
+Scenariusz:
+Twoja firma nie może wysyłać logów do systemów zewnętrznych, jeśli zawierają one wrażliwe dane (np. numery kart kredytowych lub e-maile). 
+Musisz napisać narzędzie CLI, które "wymaskuje" te dane w pliku.
+
+Wymagania techniczne:
+
+Parametry CLI:
+
+-f (wymagany): ścieżka do pliku wejściowego.
+
+-o (opcjonalny): ścieżka do pliku wynikowego (jeśli brak, wypisz na konsolę).
+
+-m (flaga): tryb "mask-email" (jeśli podany, zamień e-maile na ****@****).
+
+-c (flaga): tryb "mask-credit-card" (jeśli podany, zamień numery 16-cyfrowe na XXXX-XXXX-XXXX-1234).
+
+Mechanizm:
+
+Użyj `CliBuilder` z blokiem with { ... } (zgodnie z Groovy 4).
+
+Użyj Regexów (=~ lub replaceAll) do podmiany tekstów.
+
+Testy:
+Napisz test Spocka, który sprawdzi, czy po podaniu flagi -m e-mail test@wp.pl faktycznie został zamieniony na maskę.
+
+Podpowiedź (Szkielet kodu):
+
+Klasa LogMasker.groovy:
+
+```groovy
+import groovy.cli.picocli.CliBuilder
+
+class LogMasker {
+static void main(String[] args) {
+def cli = new CliBuilder(usage: 'LogMasker -f <file> [-m] [-c] [-o <output>]')
+cli.with {
+f(longOpt: 'file', args: 1, required: true, 'Plik wejściowy')
+m(longOpt: 'mask-email', 'Maskowanie adresów e-mail')
+c(longOpt: 'mask-card', 'Maskowanie kart kredytowych')
+o(longOpt: 'output', args: 1, 'Plik wyjściowy')
+}
+
+        def opts = cli.parse(args)
+        if (!opts) return
+
+        File input = new File(opts.f)
+        String content = input.text
+
+        if (opts.m) {
+            // Regex dla emaila: /[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/
+            content = content.replaceAll(/[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/, "****@****")
+        }
+        
+        if (opts.c) {
+            // Regex dla karty (uproszczony): /\d{4}-\d{4}-\d{4}-(\d{4})/
+            content = content.replaceAll(/\d{4}-\d{4}-\d{4}-(\d{4})/, "XXXX-XXXX-XXXX-\$1")
+        }
+
+        if (opts.o) {
+            new File(opts.o).text = content
+            println "Zapisano zamaskowany plik w: ${opts.o}"
+        } else {
+            println content
+        }
+    }
+}
+```
+
+Twoje kroki do wykonania:
+
+Zaimplementuj LogMasker w src/main/groovy.
+
+Zaktualizuj build.gradle – dodaj nowy task runLogMasker (lub zmień istniejący), pamiętając o javaLauncher i mainClass.set('LogMasker').
+
+Stwórz plik test.log z treścią:
+
+```text
+User jan@kowalski.pl logged in.
+Payment processed for card 1111-2222-3333-4444.
+```
+Uruchom z terminala:
+
+./gradlew runLogMasker -PappArgs="-f test.log -m -c"
+
+Sprawdź wynik – e-mail powinien zniknąć, a karta powinna mieć widoczne tylko ostatnie 4 cyfry.
+
+
+
+
+Test Spook:
+-----------
+Aby testowanie narzędzi CLI było profesjonalne i zgodne z zasadą "Java-Groovy-Practices", 
+musimy zastosować mały trik architektoniczny: 
+wydzielić logikę przetwarzania tekstu do oddzielnej metody.
+
+Testowanie bezpośrednio metody static void main jest trudne, bo wymaga symulowania plików na dysku i przechwytywania konsoli. 
+Jeśli wydzielimy logikę maskowania, będziemy mogli ją przetestować błyskawicznie w pamięci.
+
+Krok 1: utworzenie analogicznej klasy `LogMaskerWithTestingPossibility.groovy`
+
+Zmodyfikuj swoją klasę tak, aby zawierała metodę `maskContent`. 
+Dzięki temu "serce" Twojego programu będzie łatwo testowalne.
+
+```groovy
+import groovy.cli.picocli.CliBuilder
+
+class LogMaskerWithTestingPossibility {
+
+    // Wydzielona logika - to będziemy testować!
+    static String maskContent(String content, boolean maskEmail, boolean maskCard) {
+        if (maskEmail) {
+            // Regex dla emaila
+            content = content.replaceAll(/[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/, "****@****")
+        }
+        
+        if (maskCard) {
+            // Regex dla karty - $1 odnosi się do grupy (\d{4})
+            content = content.replaceAll(/\d{4}-\d{4}-\d{4}-(\d{4})/, "XXXX-XXXX-XXXX-\$1")
+        }
+        return content
+    }
+
+    static void main(String[] args) {
+        def cli = new CliBuilder(usage: 'LogMasker -f <file> [-m] [-c] [-o <output>]')
+        cli.with {
+            f(longOpt: 'file', args: 1, required: true, 'Plik wejściowy')
+            m(longOpt: 'mask-email', 'Maskowanie adresów e-mail')
+            c(longOpt: 'mask-card', 'Maskowanie kart kredytowych')
+            o(longOpt: 'output', args: 1, 'Plik wyjściowy')
+        }
+
+        def opts = cli.parse(args)
+        if (!opts) return
+
+        File input = new File(opts.f)
+        if (!input.exists()) {
+            println "BŁĄD: Plik nie istnieje"
+            return
+        }
+
+        // Wywołujemy naszą testowalną metodę
+        String result = maskContent(input.text, (boolean)opts.m, (boolean)opts.c)
+
+        if (opts.o) {
+            new File(opts.o).text = result
+            println "Zapisano w: ${opts.o}"
+        } else {
+            println result
+        }
+    }
+}
+```
+
+Krok 2: Test Spock (LogMaskerSpec.groovy)
+-----------------------------------------
+
+Teraz stworzymy test, który sprawdzi wszystkie kombinacje flag. 
+Dzięki temu masz pewność, że Twoje wyrażenia regularne (Regex) działantją poprawnie.
+
+Stwórz plik `src/test/groovy/LogMaskerSpec.groovy`:
+
+```groovy
+import spock.lang.Specification
+import spock.lang.Unroll
+
+class LogMaskerSpec extends Specification {
+
+    @Unroll
+    def "powinien poprawnie maskować dane: email=#maskEmail, card=#maskCard"() {
+        given: "tekst wejściowy z wrażliwymi danymi"
+        def input = "User jan@wp.pl kupił bilet kartą 1111-2222-3333-4444."
+
+        when: "uruchamiamy logikę maskowania"
+        def result = LogMasker.maskContent(input, maskEmail, maskCard)
+
+        then: "wynik zawiera oczekiwane maski"
+        result == expectedOutput
+
+        where: "różne kombinacje flag"
+        maskEmail | maskCard || expectedOutput
+        true      | false    || "User ****@**** kupił bilet kartą 1111-2222-3333-4444."
+        false     | true     || "User jan@wp.pl kupił bilet kartą XXXX-XXXX-XXXX-4444."
+        true      | true     || "User ****@**** kupił bilet kartą XXXX-XXXX-XXXX-4444."
+        false     | false    || "User jan@wp.pl kupił bilet kartą 1111-2222-3333-4444."
+    }
+
+    def "nie powinien nic zmieniać jeśli tekst nie zawiera maili ani kart"() {
+        given:
+        def cleanText = "To jest bezpieczny log systemowy."
+
+        expect:
+        LogMasker.maskContent(cleanText, true, true) == cleanText
+    }
+}
+```
+
+Dlaczego tak to testujemy? (Kluczowe wnioski)
+
+Testability (Testowalność): To najważniejsza lekcja tego kursu. Dobry kod to taki, który da się przetestować w izolacji. Wydzielając maskContent od main, przetestowaliśmy logikę w 50ms, zamiast bawić się w tworzenie plików na dysku.
+
+Regex w Spocku: Sprawdziliśmy, czy nasz regex poprawnie przechwycił grupę $1. Zauważ, że w kodzie Groovy piszemy \$1 (z backslashem), aby Groovy nie myślał, że to zmienna (GString).
+
+Tabela Prawdy (where:): Dzięki niej w jednym teście sprawdziliśmy wszystkie 4 możliwe stany Twojego programu (oba pola na true, oba na false i mieszane).
+
+Co teraz?
+
+Uruchom testy w IntelliJ.
+
+Uruchom gradlew clean build.
+
+Jeśli wszystko jest na zielono, to znaczy, że Twój LogMasker jest w 100% gotowy do pracy na produkcji. Stałeś się programistą, który nie tylko pisze skrypty, ale pisze je zgodnie z najlepszymi praktykami inżynierskimi.
+
+To jest idealny moment, aby ostatecznie zamknąć nasz warsztat! Gratulacje! 🚀🎓✅

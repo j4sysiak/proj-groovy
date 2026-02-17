@@ -152,3 +152,24 @@ tasks.register('runLogAnalyzer', JavaExec) {
         args(project.getProperty('appArgs').split('\\s+'))
     }
 }
+
+// Rejestracja taska dla narzędzia LogMasker
+tasks.register('runLogMasker', JavaExec) {
+    group = 'Execution'
+    description = 'Uruchamia narzędzie LogMasker do anonimizacji logów'
+
+    // 1. Wskazujemy klasę główną
+    mainClass.set('LogMasker')
+
+    // 2. Ustawiamy classpath (wszystkie biblioteki i skompilowany kod)
+    classpath = sourceSets.main.runtimeClasspath
+
+    // 3. WYMUSZENIE JAVA 17 (Rozwiązanie błędu wersji Javy)
+    def toolchainService = project.extensions.getByType(JavaToolchainService)
+    javaLauncher.set(toolchainService.launcherFor(java.toolchain))
+
+    // 4. Przekazywanie parametrów z terminala (-PappArgs)
+    if (project.hasProperty('appArgs')) {
+        args(project.getProperty('appArgs').split('\\s+'))
+    }
+}
