@@ -137,11 +137,6 @@ tasks.register('generateBuildInfo2') {
     }
 }
 
-// Dodaj ten import na samej górze pliku (jeśli go nie ma)
-import org.gradle.api.tasks.JavaExec
-
-// ... (reszta pliku bez zmian) ...
-
 tasks.register('runLogAnalyzer', JavaExec) {
     group = 'Execution'
     description = 'Uruchamia LogAnalyzer z parametrami przy użyciu Java 17'
