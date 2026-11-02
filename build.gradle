@@ -5,12 +5,14 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
+
+def groovyVersion = '4.0.33'
 
 repositories {
     // Repozytorium, z którego Gradle pobierze biblioteki (Spocka i Groovy)
@@ -18,11 +20,12 @@ repositories {
 }
 
 dependencies {
-    // Baza: Silnik Groovy 4.0 (kompatybilny z JDK 17)
-    implementation 'org.apache.groovy:groovy-all:4.0.15'
+    // Wspólna wersja modułów Groovy zgodna z Javą 21
+    implementation platform("org.apache.groovy:groovy-bom:${groovyVersion}")
+    implementation "org.apache.groovy:groovy-all:${groovyVersion}"
 
     // Baza: Spock Framework - zestaw dla Groovy 4.0
-    testImplementation platform('org.spockframework:spock-bom:2.3-groovy-4.0')
+    testImplementation platform('org.spockframework:spock-bom:2.4-groovy-4.0')
     testImplementation 'org.spockframework:spock-core'
 
     implementation 'org.codehaus.gpars:gpars:1.2.1'
@@ -38,7 +41,7 @@ dependencies {
     implementation 'com.h2database:h2:2.2.224'
 
     // --- NOWE: Spring Boot Core (Dla @Service, @Component, @Autowired) ---
-    // Używamy wersji 3.x, która wymaga Javy 17 (którą masz)
+    // Spring Boot 3.2 obsługuje Javę 21
     implementation 'org.springframework.boot:spring-boot-starter:3.2.1'
 
     // --- NOWE: Spring Boot Test (Dla @SpringBootTest, @MockBean) ---
@@ -46,16 +49,11 @@ dependencies {
 
     // --- NOWE: Spock + Spring Integration (Kluczowe dla Lab 18!) ---
     // To pozwala Spockowi rozumieć kontekst Springa
-    testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
-
-
-    // Jeśli nie masz Springa w projekcie, normalnie byś go tu miał.
-    // Zakładamy symulację lub dodaj:
-    implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
+    testImplementation 'org.spockframework:spock-spring'
 
     // CLI oparty jest na potężnej bibliotece Picocli
     // Ta biblioteka pozwala tworzyć interfejsy wiersza poleceń z minimalnym nakładem kodu
-    testImplementation 'org.apache.groovy:groovy-cli-picocli:4.0.15'
+    testImplementation 'org.apache.groovy:groovy-cli-picocli'
 }
 
 test {
@@ -139,12 +137,12 @@ tasks.register('generateBuildInfo2') {
 
 tasks.register('runLogAnalyzer', JavaExec) {
     group = 'Execution'
-    description = 'Uruchamia LogAnalyzer z parametrami przy użyciu Java 17'
+    description = 'Uruchamia LogAnalyzer z parametrami przy użyciu Java 21'
 
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set('LogAnalyzer')
 
-    // WYMUSZENIE JAVA 17: Mówimy taskowi, żeby pobrał javę z toolchaina projektu
+    // Używamy Javy z toolchaina projektu
     def toolchainService = project.extensions.getByType(JavaToolchainService)
     javaLauncher.set(toolchainService.launcherFor(java.toolchain))
 
@@ -164,7 +162,7 @@ tasks.register('runLogMasker', JavaExec) {
     // 2. Ustawiamy classpath (wszystkie biblioteki i skompilowany kod)
     classpath = sourceSets.main.runtimeClasspath
 
-    // 3. WYMUSZENIE JAVA 17 (Rozwiązanie błędu wersji Javy)
+    // 3. Używamy Javy z toolchaina projektu
     def toolchainService = project.extensions.getByType(JavaToolchainService)
     javaLauncher.set(toolchainService.launcherFor(java.toolchain))
 

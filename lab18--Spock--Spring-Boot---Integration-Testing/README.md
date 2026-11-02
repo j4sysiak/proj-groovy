@@ -11,7 +11,8 @@ Krok 1: Dodaj zależność do build.gradle (konieczne dla integracji):
 
 ```groovy
 dependencies {
-    testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
+    // Wersja pochodzi ze spock-bom:2.4-groovy-4.0 w build.gradle
+    testImplementation 'org.spockframework:spock-spring'
     // Jeśli nie masz Springa w projekcie, normalnie byś go tu miał.
     // Zakładamy symulację lub dodaj: implementation 'org.springframework.boot:spring-boot-starter:3.1.0'
 }
@@ -210,4 +211,3 @@ Chcesz sprawdzić, czy obsługuje błędy, ale nie masz łatwego sposobu na spra
 Dzięki Spy, możesz sprawdzić efekt uboczny (wywołanie metody log), nie zmieniając ani linijki kodu produkcyjnego pod testy.
 
  
-
