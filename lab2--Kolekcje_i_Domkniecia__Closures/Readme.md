@@ -4,6 +4,7 @@ czas na serce Groovy’ego, czyli to, co sprawia, że programiści Javy go uwiel
 Lab 2: Kolekcje i Domknięcia (Closures)
 ---------------------------------------
 
+
 Cel: 
 Nauczysz się operować na listach i mapach z prędkością światła, zapominając o pętlach for i skomplikowanych Streamach z Javy.
 
